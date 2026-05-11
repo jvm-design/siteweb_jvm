@@ -528,8 +528,51 @@ const initCaseDetail = () => {
   });
 };
 
+/* Media thumbs — still image by default, swap to animated GIF on hover (desktop)
+   or when scrolled into the central viewport band (touch). */
+const initMediaThumbs = () => {
+  const thumbs = document.querySelectorAll(".list.craft .thumb-media[data-anim]");
+  if (!thumbs.length || reducedMotion) return;
+
+  const play = (img) => {
+    const anim = img.dataset.anim;
+    if (anim && img.src !== anim) img.src = anim;
+  };
+  const stop = (img) => {
+    const still = img.dataset.still;
+    if (still && img.src !== still) img.src = still;
+  };
+
+  if (canHover) {
+    thumbs.forEach((img) => {
+      const a = img.closest("a");
+      if (!a) return;
+      a.addEventListener("pointerenter", () => play(img));
+      a.addEventListener("pointerleave", () => stop(img));
+    });
+    return;
+  }
+
+  const io = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((e) => {
+        const img = e.target.querySelector(".thumb-media[data-anim]");
+        if (!img) return;
+        if (e.isIntersecting) play(img);
+        else stop(img);
+      });
+    },
+    { threshold: 0, rootMargin: "-35% 0px -35% 0px" }
+  );
+  thumbs.forEach((img) => {
+    const item = img.closest(".list-item");
+    if (item) io.observe(item);
+  });
+};
+
 initExperienceFilter();
 initCraftThumbs();
+initMediaThumbs();
 initOverlay();
 initCaseStudy();
 initCaseBack();
