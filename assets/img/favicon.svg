@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <style>
+    rect { fill: #000; }
+    text { fill: #fff; }
+    @media (prefers-color-scheme: dark) {
+      rect { fill: #f4f4f5; }
+      text { fill: #0b0b0c; }
+    }
+  </style>
+  <rect width="64" height="64" rx="32"/>
+  <text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif" font-weight="500" font-size="22" letter-spacing="0.5">JVM</text>
+</svg>

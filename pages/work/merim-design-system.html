@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Design system · Jaime Villegas Maira</title>
+  <meta name="description" content="Étude de cas : Design system — Merim Groupe · Tokens, composants, librairie code." />
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0b0b0c" media="(prefers-color-scheme: dark)" />
+  <link rel="icon" type="image/svg+xml" href="../../assets/img/favicon.svg" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Design system · Jaime Villegas Maira" />
+  <meta property="og:description" content="Étude de cas : Design system — Merim Groupe · Tokens, composants, librairie code." />
+  <meta property="og:locale" content="fr_FR" />
+  <meta name="twitter:card" content="summary" />
+
+  <link rel="stylesheet" href="../../assets/css/reset.css" />
+  <link rel="stylesheet" href="../../assets/css/styles.css?v=41" />
+</head>
+<body class="case-study">
+  <a class="skip-link" href="#case">Aller au contenu</a>
+
+  <header class="case-bar" role="banner">
+    <div class="case-bar__back">
+      <a href="../work.html">← Tous les projets</a>
+    </div>
+    <div class="case-bar__next">
+      <a href="merim-caisse.html">
+        <span class="case-bar__next-name">Module Caisse</span>
+      </a>
+    </div>
+  </header>
+
+  <article class="case" id="case">
+    <div class="case-grid" data-detail-grid>
+
+      <!-- Meta : sticky bottom-left, the editorial spine -->
+      <aside class="case-meta">
+        <div class="case-meta-inner">
+          <h1 class="case-title">Design system</h1>
+          <p class="case-meta__sub">Merim Groupe · 2023–24</p>
+          <p class="case-desc case-desc--lead">Sortir un design system du Figma — et le faire adopter par l'équipe.</p>
+          <p class="case-desc">Reprise d'un design system à l'arrêt depuis 6 mois — chantier hérité d'un prestataire, accumulation de composants custom, interfaces vieillissantes. Refonte des fondations sur standards internationaux, livrée en Figma <em>et</em> en librairie code consommable par toute l'équipe front et produit.</p>
+          <p class="case-desc">Lead Product Designer &amp; PM, première embauche design. Gouvernance par contribution hebdomadaire, migration progressive du parc applicatif Merim (Reporting, Caisse, Drive-thru).</p>
+          <button class="case-cta case-cta--toggle" type="button" data-detail-toggle aria-expanded="false" aria-controls="case-detail">
+            <span class="case-cta__label" data-cta-state="closed">Plus d'information →</span>
+            <span class="case-cta__label" data-cta-state="open">← Revenir à la galerie</span>
+          </button>
+        </div>
+      </aside>
+
+      <!-- Thumbs : narrow scrolling spine -->
+      <ol class="case-thumbs" role="list">
+        <li data-stage-src="">
+          <span class="thumb-num">01 / 04</span>
+          <div class="thumb-frame" style="background: linear-gradient(135deg, #7a3309 0%, #a85a14 100%);"></div>
+          <figcaption>Tokens &amp; fondations — typo, couleur, espacement, élévation.</figcaption>
+        </li>
+        <li data-stage-src="">
+          <span class="thumb-num">02 / 04</span>
+          <div class="thumb-frame" style="background: linear-gradient(135deg, #92400e 0%, #c97a18 100%);"></div>
+          <figcaption>Composants — bibliothèque Figma synchronisée avec librairie code.</figcaption>
+        </li>
+        <li data-stage-src="">
+          <span class="thumb-num">03 / 04</span>
+          <div class="thumb-frame" style="background: linear-gradient(135deg, #a4521b 0%, #d98c25 100%);"></div>
+          <figcaption>Migration Reporting — module pilote, preuve de valeur.</figcaption>
+        </li>
+        <li data-stage-src="">
+          <span class="thumb-num">04 / 04</span>
+          <div class="thumb-frame" style="background: linear-gradient(135deg, #b56b22 0%, #fbbf24 100%);"></div>
+          <figcaption>Gouvernance — instance hebdo, contribution dev + produit.</figcaption>
+        </li>
+      </ol>
+
+      <!-- Stage : sticky right, the revealed object -->
+      <section class="case-stage" aria-label="Galerie">
+        <div class="stage-frame" data-stage>
+          <img class="stage-media stage-img" alt="" />
+          <video class="stage-media stage-video" muted loop playsinline preload="metadata" aria-hidden="true"></video>
+          <span class="stage-counter" aria-hidden="true">01 / 04</span>
+        </div>
+      </section>
+
+      <!-- Detail panel : revealed in-place from sidebar CTA -->
+      <aside class="case-detail" id="case-detail" data-detail-panel aria-hidden="true" inert>
+        <div class="case-detail__scroll" data-detail-scroll>
+          <div class="case-detail__inner">
+
+            <section class="case-detail__section" aria-labelledby="detail-role">
+              <p class="case-detail__kicker">Mon rôle</p>
+              <h2 id="detail-role">Lead Product Designer &amp; Product Manager</h2>
+              <p class="case-detail__lead">Première embauche design chez Merim. Reprise du chantier design system, refonte des fondations, mise en place d'une gouvernance pérenne.</p>
+              <p>Le DS était commencé depuis 6&nbsp;mois sous la main d'un prestataire, sans avancement notable. Interfaces vieillissantes, frictions UX, mismatch chronique entre les maquettes livrées et le rendu en production.</p>
+              <ul class="case-detail__list">
+                <li><strong>Design</strong> — tokens (typo, couleur, espacement, élévation), bibliothèque de composants Figma, guidelines d'usage, specs d'accessibilité.</li>
+                <li><strong>Produit</strong> — cadrage roadmap DS, priorisation des modules à migrer, critères d'acceptance pour chaque composant publié.</li>
+                <li><strong>Gouvernance</strong> — mise en place d'une instance design system hebdomadaire (devs front + PM), processus de contribution ouvert, decision log.</li>
+              </ul>
+              <p class="case-detail__caveat">Ce que je n'ai pas fait&nbsp;: le code de la librairie composants (équipe front), l'arbitrage budgétaire avec le prestataire sortant (direction).</p>
+            </section>
+
+            <section class="case-detail__section" aria-labelledby="detail-decisions">
+              <p class="case-detail__kicker">Trois décisions</p>
+              <h2 id="detail-decisions">Les arbitrages qui ont débloqué le projet</h2>
+              <ol class="case-decisions" role="list">
+                <li>
+                  <span class="case-decisions__index">01</span>
+                  <h3>Standards internationaux plutôt qu'identité maison</h3>
+                  <p>Le DS hérité partait sur une identité Merim propre, à coups de composants custom. Chaque nouveau besoin&nbsp;= nouveau composant unique, dette qui s'auto-alimente — d'où l'arrêt du chantier.</p>
+                  <p>J'ai pivoté sur des fondations alignées Material&nbsp;/&nbsp;HIG&nbsp;: patterns connus des utilisateurs, dette technique réduite, onboarding développeur plus rapide. <strong>Résistance</strong>&nbsp;: équipe dev attachée aux interfaces existantes — «&nbsp;tant que ce n'est pas cassé, on ne touche pas&nbsp;». Embarquée via documentation des arbitrages et instance hebdo.</p>
+                </li>
+                <li>
+                  <span class="case-decisions__index">02</span>
+                  <h3>Gouvernance par contribution hebdomadaire, pas top-down</h3>
+                  <p>Première embauche design&nbsp;: tentation naturelle de cadrer tout en solo et de livrer. Mais sans adoption, un DS reste un Figma dans un tiroir — c'est exactement ce qui était arrivé au chantier prestataire.</p>
+                  <p>J'ai instauré une instance design system hebdomadaire&nbsp;: devs front + PM autour de la table, décisions de composants prises collectivement, contribution ouverte. <strong>Coût</strong>&nbsp;: cadrage co-construit plus lent les premiers mois. <strong>Bénéfice</strong>&nbsp;: le DS est devenu le langage commun de l'équipe, pas mon projet personnel.</p>
+                </li>
+                <li>
+                  <span class="case-decisions__index">03</span>
+                  <h3>Migration progressive depuis Reporting, pas big-bang</h3>
+                  <p>Le projet prestataire visait une refonte simultanée de toute la plateforme — raison de l'absence d'avancée en 6&nbsp;mois. J'ai cadré une migration progressive, en commençant par le module Reporting&nbsp;: périmètre maîtrisable, criticité opérationnelle limitée, équipe disponible.</p>
+                  <p><strong>Bénéfice</strong>&nbsp;: preuve de valeur livrée vite, gain de confiance, déploiement ensuite sur le reste du parc (Caisse, Drive-thru). <strong>Coût assumé</strong>&nbsp;: deux UX cohabitent pendant la transition — choix documenté et accepté.</p>
+                </li>
+              </ol>
+            </section>
+
+            <section class="case-detail__section" aria-labelledby="detail-impact">
+              <p class="case-detail__kicker">Impact</p>
+              <h2 id="detail-impact">Ce que ça a livré</h2>
+              <ul class="case-detail__impact" role="list">
+                <li>Design system livré en Figma <em>et</em> en librairie code, consommable par toute l'équipe front et produit.</li>
+                <li>Migration progressive du parc applicatif&nbsp;: Reporting → reste de la plateforme, sans interruption produit.</li>
+                <li>Mismatch maquette&nbsp;/&nbsp;production neutralisé sur les surfaces migrées — fin des allers-retours design&nbsp;/&nbsp;dev sur les composants standards.</li>
+                <li>Instance de gouvernance design hebdomadaire pérenne, contribution ouverte aux devs et PM — DS adopté comme langage commun.</li>
+              </ul>
+            </section>
+
+          </div>
+        </div>
+      </aside>
+
+    </div>
+  </article>
+
+  <script src="../../assets/js/main.js?v=10"></script>
+</body>
+</html>

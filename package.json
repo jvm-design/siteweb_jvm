@@ -1,0 +1,9 @@
+{
+  "name": "siteweb-jvm",
+  "version": "0.1.0",
+  "description": "Site personnel — HTML/CSS statique.",
+  "private": true,
+  "scripts": {
+    "dev": "npx --yes live-server --port=8765 --no-browser"
+  }
+}
