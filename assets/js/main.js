@@ -5,6 +5,325 @@ navLinks.forEach((a) => {
   if (href === current) a.setAttribute("aria-current", "page");
 });
 
+/* Preview convention — drop files in assets/previews/<slug>/<role>.<ext>
+   and they are auto-discovered. Roles : tile (work.html + craft list),
+   home (index.html hover, falls back to tile), stage-NN / thumb-NN
+   (case studies). Supported extensions tried in order. */
+const PREVIEW_EXTS = ["mp4", "webm", "gif", "svg", "png", "jpg", "jpeg", "webp", "json"];
+const PREVIEW_VIDEO_EXTS = new Set(["mp4", "webm", "mov", "ogg", "ogv"]);
+const PREVIEW_LOTTIE_EXTS = new Set(["json"]);
+
+const PREVIEWS_BASE = (() => {
+  const s = document.currentScript || document.querySelector('script[src*="main.js"]');
+  if (s) return new URL("../previews/", s.src).href;
+  return "/assets/previews/";
+})();
+
+const resolvePreviewUrl = async (slug, role) => {
+  if (!slug || !role) return null;
+  const cacheKey = `pv:${slug}/${role}`;
+  try {
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached === "NONE") return null;
+    if (cached) return cached;
+  } catch (_) {}
+  for (const ext of PREVIEW_EXTS) {
+    const url = `${PREVIEWS_BASE}${slug}/${role}.${ext}`;
+    try {
+      const r = await fetch(url, { method: "HEAD", cache: "no-store" });
+      if (r.ok) {
+        try { sessionStorage.setItem(cacheKey, url); } catch (_) {}
+        return url;
+      }
+    } catch (_) {}
+  }
+  try { sessionStorage.setItem(cacheKey, "NONE"); } catch (_) {}
+  return null;
+};
+
+const previewExt = (url) =>
+  (url.split("?")[0].split("#")[0].split(".").pop() || "").toLowerCase();
+
+/* Animated raster images (gif / animated webp) — extract the last frame via
+   ImageDecoder so we can show it as a still idle state. Returns a data URL,
+   or null if the image is single-frame / decoder unsupported / fetch failed. */
+const _lastFrameCache = new Map();
+const extractLastFrameDataUrl = async (url) => {
+  if (_lastFrameCache.has(url)) return _lastFrameCache.get(url);
+  if (typeof ImageDecoder === "undefined") return null;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const mime = res.headers.get("content-type")
+      || (previewExt(url) === "gif" ? "image/gif" : "image/webp");
+    const decoder = new ImageDecoder({ data: res.body, type: mime });
+    await decoder.completed;
+    const track = decoder.tracks.selectedTrack;
+    if (!track || track.frameCount < 2) {
+      _lastFrameCache.set(url, null);
+      return null;
+    }
+    const result = await decoder.decode({ frameIndex: track.frameCount - 1 });
+    const canvas = document.createElement("canvas");
+    canvas.width = result.image.displayWidth;
+    canvas.height = result.image.displayHeight;
+    canvas.getContext("2d").drawImage(result.image, 0, 0);
+    result.image.close();
+    const dataUrl = canvas.toDataURL("image/png");
+    _lastFrameCache.set(url, dataUrl);
+    return dataUrl;
+  } catch (_) {
+    _lastFrameCache.set(url, null);
+    return null;
+  }
+};
+
+let _lottieLibPromise = null;
+const loadLottieLib = () => {
+  if (window.lottie) return Promise.resolve(window.lottie);
+  if (_lottieLibPromise) return _lottieLibPromise;
+  _lottieLibPromise = new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = "https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie_light.min.js";
+    s.onload = () => resolve(window.lottie);
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+  return _lottieLibPromise;
+};
+const _lottieDataCache = new Map();
+const fetchLottieData = async (url) => {
+  if (_lottieDataCache.has(url)) return _lottieDataCache.get(url);
+  const data = await (await fetch(url)).json();
+  _lottieDataCache.set(url, data);
+  return data;
+};
+const makeLottieEl = (url, className) => {
+  const div = document.createElement("div");
+  div.setAttribute("aria-hidden", "true");
+  if (className) div.className = className;
+  div.classList.add("preview-lottie-host");
+  Promise.all([loadLottieLib(), fetchLottieData(url)]).then(([lottie, data]) => {
+    if (!div.isConnected) return;
+    div._lottieAnim = lottie.loadAnimation({
+      container: div,
+      renderer: "svg",
+      loop: true,
+      autoplay: true,
+      animationData: data,
+      rendererSettings: { preserveAspectRatio: "xMidYMid slice" },
+    });
+  }).catch(() => {});
+  return div;
+};
+
+const makePreviewMedia = (url, className) => {
+  const ext = previewExt(url);
+  if (PREVIEW_LOTTIE_EXTS.has(ext)) return makeLottieEl(url, className);
+  if (PREVIEW_VIDEO_EXTS.has(ext)) {
+    const v = document.createElement("video");
+    v.muted = true;
+    v.setAttribute("muted", "");
+    v.setAttribute("autoplay", "");
+    v.setAttribute("loop", "");
+    v.setAttribute("playsinline", "");
+    v.setAttribute("preload", "metadata");
+    v.setAttribute("aria-hidden", "true");
+    if (className) v.className = className;
+    v.src = url;
+    queueMicrotask(() => { v.play().catch(() => {}); });
+    return v;
+  }
+  const img = document.createElement("img");
+  img.src = url; img.alt = "";
+  img.loading = "lazy";
+  img.decoding = "async";
+  if (className) img.className = className;
+  return img;
+};
+
+const applyPreviewConvention = async () => {
+  const tasks = [];
+
+  // 1) Craft list tiles (work.html). Static formats render persistently.
+  //    Animated formats (video / Lottie) render their last frame as idle
+  //    state and only play on hover (desktop). On touch / reduced-motion the
+  //    last frame stays visible without playback.
+  document.querySelectorAll(".list.craft .list-item[id]").forEach((li) => {
+    const a = li.querySelector("a");
+    const thumb = li.querySelector(".thumb");
+    if (!a || !thumb) return;
+    if (thumb.querySelector("video, img, .preview-lottie-host")) return;
+    tasks.push((async () => {
+      const url = await resolvePreviewUrl(li.id, "tile");
+      if (!url) return;
+      const ext = previewExt(url);
+      const isVideo = PREVIEW_VIDEO_EXTS.has(ext);
+      const isLottie = PREVIEW_LOTTIE_EXTS.has(ext);
+      const isMaybeAnimImg = ext === "gif" || ext === "webp";
+      const hoverPlayable = canHover && !reducedMotion;
+      if (!isVideo && !isLottie && !isMaybeAnimImg) {
+        const media = makePreviewMedia(url, "thumb-media");
+        if (!media) return;
+        thumb.textContent = "";
+        thumb.appendChild(media);
+        return;
+      }
+      if (isMaybeAnimImg) {
+        const lastFrame = await extractLastFrameDataUrl(url);
+        if (!lastFrame) {
+          // Single-frame / decoder unsupported : keep static behavior.
+          const media = makePreviewMedia(url, "thumb-media");
+          if (!media) return;
+          thumb.textContent = "";
+          thumb.appendChild(media);
+          return;
+        }
+        const still = document.createElement("img");
+        still.className = "thumb-media";
+        still.alt = "";
+        still.decoding = "async";
+        still.src = lastFrame;
+        thumb.textContent = "";
+        thumb.appendChild(still);
+        if (hoverPlayable) {
+          let live = null;
+          a.addEventListener("pointerenter", () => {
+            if (live) return;
+            live = document.createElement("img");
+            live.className = "thumb-media";
+            live.alt = "";
+            live.decoding = "async";
+            live.src = url;
+            thumb.appendChild(live);
+          });
+          a.addEventListener("pointerleave", () => {
+            if (!live) return;
+            live.remove();
+            live = null;
+          });
+        }
+        return;
+      }
+      if (isVideo) {
+        const v = document.createElement("video");
+        v.className = "thumb-media";
+        v.muted = true;
+        v.setAttribute("muted", "");
+        v.setAttribute("playsinline", "");
+        v.setAttribute("preload", "metadata");
+        v.setAttribute("aria-hidden", "true");
+        v.loop = false;
+        v.src = url;
+        const seekToEnd = () => {
+          if (!isFinite(v.duration)) return;
+          try { v.currentTime = Math.max(0, v.duration - 0.05); } catch (_) {}
+        };
+        v.addEventListener("loadedmetadata", seekToEnd, { once: true });
+        thumb.textContent = "";
+        thumb.appendChild(v);
+        if (hoverPlayable) {
+          a.addEventListener("pointerenter", () => {
+            v.loop = true;
+            try { v.currentTime = 0; } catch (_) {}
+            v.play().catch(() => {});
+          });
+          a.addEventListener("pointerleave", () => {
+            try { v.pause(); } catch (_) {}
+            v.loop = false;
+            seekToEnd();
+          });
+        }
+        return;
+      }
+      // Lottie
+      const div = document.createElement("div");
+      div.className = "thumb-media preview-lottie-host";
+      div.setAttribute("aria-hidden", "true");
+      thumb.textContent = "";
+      thumb.appendChild(div);
+      const fitMode = li.hasAttribute("data-fit") && li.getAttribute("data-fit") !== "false";
+      const idleFrameAttr = li.getAttribute("data-idle-frame");
+      const idleFrameOverride = idleFrameAttr !== null ? Number(idleFrameAttr) : null;
+      Promise.all([loadLottieLib(), fetchLottieData(url)]).then(([lottie, data]) => {
+        if (!div.isConnected) return;
+        const anim = lottie.loadAnimation({
+          container: div,
+          renderer: "svg",
+          loop: false,
+          autoplay: false,
+          animationData: data,
+          rendererSettings: { preserveAspectRatio: fitMode ? "xMidYMid meet" : "xMidYMid slice" },
+        });
+        div._lottieAnim = anim;
+        try { anim.goToAndStop(0, true); } catch (_) {}
+        const goToIdle = () => {
+          try { anim.pause(); } catch (_) {}
+          const last = Math.max(0, (anim.totalFrames || 1) - 1);
+          const target = (idleFrameOverride !== null && Number.isFinite(idleFrameOverride))
+            ? Math.min(Math.max(0, idleFrameOverride), last)
+            : last;
+          try { anim.goToAndStop(target, true); } catch (_) {}
+        };
+        anim.addEventListener("data_ready", goToIdle);
+        anim.addEventListener("DOMLoaded", goToIdle);
+        if (hoverPlayable) {
+          a.addEventListener("pointerenter", () => {
+            try { anim.loop = true; } catch (_) {}
+            try { anim.goToAndPlay(0, true); } catch (_) {}
+          });
+          a.addEventListener("pointerleave", () => {
+            try { anim.loop = false; } catch (_) {}
+            goToIdle();
+          });
+        }
+      }).catch(() => {});
+    })());
+  });
+
+  // 2) Case-study thumbs — stage media + (optional) static thumb frame.
+  const csSlug = document.body.dataset.slug;
+  if (csSlug) {
+    document.querySelectorAll(".case-thumbs > li").forEach((li, i) => {
+      const n = String(i + 1).padStart(2, "0");
+      const frame = li.querySelector(".thumb-frame");
+      tasks.push((async () => {
+        let stageUrl = li.dataset.stageSrc;
+        if (!stageUrl) {
+          const resolved = await resolvePreviewUrl(csSlug, `stage-${n}`);
+          if (resolved) {
+            li.dataset.stageSrc = resolved;
+            stageUrl = resolved;
+          }
+        }
+        if (frame && !frame.querySelector("video, img")) {
+          let thumbUrl = await resolvePreviewUrl(csSlug, `thumb-${n}`);
+          if (!thumbUrl) thumbUrl = stageUrl || null;
+          if (thumbUrl) {
+            const media = makePreviewMedia(thumbUrl, "");
+            if (media) {
+              frame.style.background = "#000";
+              frame.appendChild(media);
+            }
+          }
+        }
+      })());
+    });
+  }
+
+  // 3) Home hover previews (index.html) — honor explicit data-preview-src.
+  document.querySelectorAll("[data-preview][data-slug]").forEach((el) => {
+    if (el.dataset.previewSrc) return;
+    tasks.push((async () => {
+      let url = await resolvePreviewUrl(el.dataset.slug, "home");
+      if (!url) url = await resolvePreviewUrl(el.dataset.slug, "tile");
+      if (url) el.dataset.previewSrc = url;
+    })());
+  });
+
+  await Promise.all(tasks);
+};
+
 const yearEl = document.getElementById("year");
 if (yearEl) yearEl.textContent = new Date().getFullYear();
 
@@ -389,6 +708,9 @@ const initCaseStudy = () => {
   const counterEl = stage.querySelector(".stage-counter");
   const total = thumbs.length;
   const VIDEO_RE = /\.(mp4|webm|mov|ogg|ogv)(\?|#|$)/i;
+  const LOTTIE_RE = /\.(json|lottie)(\?|#|$)/i;
+  let lottieEl = null;
+  let lottieAnim = null;
 
   const fmt = (n) => String(n).padStart(2, "0");
 
@@ -407,10 +729,14 @@ const initCaseStudy = () => {
     const li = thumbs[idx];
     const src = li?.dataset.stageSrc || "";
 
-    // Always reset both layers so we don't pile up.
+    // Always reset all layers so we don't pile up.
     imgEl.classList.remove("active");
     videoEl.classList.remove("active");
     try { videoEl.pause(); } catch (_) {}
+    if (lottieEl) {
+      lottieEl.classList.remove("active");
+      if (lottieAnim) { try { lottieAnim.stop(); } catch (_) {} }
+    }
 
     if (!src) {
       // Placeholder thumbnail — keep stage empty (frame bg shows).
@@ -424,6 +750,27 @@ const initCaseStudy = () => {
       videoEl.src = src;
       videoEl.play().catch(() => {});
       videoEl.classList.add("active");
+    } else if (LOTTIE_RE.test(src)) {
+      if (!lottieEl) {
+        lottieEl = document.createElement("div");
+        lottieEl.className = "stage-media stage-lottie";
+        lottieEl.setAttribute("aria-hidden", "true");
+        stage.appendChild(lottieEl);
+      }
+      Promise.all([loadLottieLib(), fetchLottieData(src)]).then(([lottie, data]) => {
+        if (activeIdx !== idx) return;
+        if (lottieAnim) { try { lottieAnim.destroy(); } catch (_) {} lottieAnim = null; }
+        lottieEl.innerHTML = "";
+        lottieAnim = lottie.loadAnimation({
+          container: lottieEl,
+          renderer: "svg",
+          loop: true,
+          autoplay: true,
+          animationData: data,
+          rendererSettings: { preserveAspectRatio: "xMidYMid slice" },
+        });
+        lottieEl.classList.add("active");
+      }).catch(() => {});
     } else {
       imgEl.addEventListener("load", () => {
         if (activeIdx === idx) imgEl.classList.add("active");
@@ -529,8 +876,10 @@ const initCaseDetail = () => {
 };
 
 initExperienceFilter();
-initCraftThumbs();
 initOverlay();
-initCaseStudy();
 initCaseBack();
 initCaseDetail();
+applyPreviewConvention().then(() => {
+  initCraftThumbs();
+  initCaseStudy();
+});
