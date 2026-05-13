@@ -992,6 +992,8 @@ body.no-scroll { overflow: hidden; }
   transition: opacity 0.45s var(--ease);
 }
 .stage-media.active { opacity: 1; }
+[data-slug="autoya-mobile"] .stage-frame,
+[data-slug="autoya-mobile"] .thumb-frame { aspect-ratio: 1 / 1; }
 .stage-counter {
   position: absolute;
   top: calc(var(--unit) * 1.5);
