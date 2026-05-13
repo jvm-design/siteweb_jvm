@@ -997,28 +997,118 @@ const initExperienceFilter = () => {
   window.addEventListener("popstate", () => apply(currentKey()));
 };
 
-/* Case study — scroll-driven big-stage swap from a thumb rail. */
+/* Case study — scroll-driven big-stage swap from a thumb rail.
+   Each swap builds a fresh layer, waits for it to be decoded / first-frame ready,
+   then reveals it BENEATH the outgoing one. The outgoing dissolves on top,
+   so the user never sees a half-loaded image mid-fade. */
 const initCaseStudy = () => {
   const stage = document.querySelector("[data-stage]");
   if (!stage) return;
   const thumbs = [...document.querySelectorAll(".case-thumbs > li")];
   if (!thumbs.length) return;
 
-  const imgEl = stage.querySelector(".stage-img");
-  const videoEl = stage.querySelector(".stage-video");
+  // The static <img>/<video> in the template are placeholders for the first paint —
+  // we own the layer DOM dynamically from here on.
+  stage.querySelector(".stage-img")?.remove();
+  stage.querySelector(".stage-video")?.remove();
+
   const counterEl = stage.querySelector(".stage-counter");
   const total = thumbs.length;
   const VIDEO_RE = /\.(mp4|webm|mov|ogg|ogv)(\?|#|$)/i;
   const LOTTIE_RE = /\.(json|lottie)(\?|#|$)/i;
-  let lottieEl = null;
-  let lottieAnim = null;
 
   const fmt = (n) => String(n).padStart(2, "0");
 
   let activeIdx = -1;
+  let pendingIdx = -1;
+  let currentLayer = null;
 
-  const swap = (idx) => {
-    if (idx === activeIdx) return;
+  const buildLayer = (src) => {
+    if (!src) return null;
+    if (VIDEO_RE.test(src)) {
+      const v = document.createElement("video");
+      v.className = "stage-media stage-video";
+      v.muted = true;
+      v.loop = true;
+      v.playsInline = true;
+      v.setAttribute("playsinline", "");
+      v.preload = "auto";
+      v.setAttribute("aria-hidden", "true");
+      v.src = src;
+      return { el: v, type: "video", src };
+    }
+    if (LOTTIE_RE.test(src)) {
+      const d = document.createElement("div");
+      d.className = "stage-media stage-lottie";
+      d.setAttribute("aria-hidden", "true");
+      return { el: d, type: "lottie", src };
+    }
+    const img = document.createElement("img");
+    img.className = "stage-media stage-img";
+    img.alt = "";
+    img.decoding = "async";
+    img.src = src;
+    return { el: img, type: "image", src };
+  };
+
+  const whenReady = (layer) => new Promise((resolve) => {
+    if (!layer) return resolve();
+    if (layer.type === "image") {
+      const img = layer.el;
+      const done = () => resolve();
+      if (img.decode) img.decode().then(done, done);
+      else if (img.complete) done();
+      else {
+        img.addEventListener("load", done, { once: true });
+        img.addEventListener("error", done, { once: true });
+      }
+    } else if (layer.type === "video") {
+      const v = layer.el;
+      if (v.readyState >= 2) return resolve();
+      const done = () => {
+        v.removeEventListener("loadeddata", done);
+        v.removeEventListener("error", done);
+        resolve();
+      };
+      v.addEventListener("loadeddata", done, { once: true });
+      v.addEventListener("error", done, { once: true });
+      // Safety net : never block the swap on a wedged video.
+      setTimeout(done, 1500);
+    } else if (layer.type === "lottie") {
+      Promise.all([loadLottieLib(), fetchLottieData(layer.src)])
+        .then(([lottie, data]) => {
+          if (layer.cancelled) return resolve();
+          layer.anim = lottie.loadAnimation({
+            container: layer.el,
+            renderer: "svg",
+            loop: true,
+            autoplay: true,
+            animationData: data,
+            rendererSettings: { preserveAspectRatio: "xMidYMid slice" },
+          });
+          resolve();
+        })
+        .catch(() => resolve());
+    } else {
+      resolve();
+    }
+  });
+
+  const destroyLayer = (layer) => {
+    if (!layer || !layer.el) return;
+    layer.cancelled = true;
+    if (layer.type === "video") {
+      try { layer.el.pause(); } catch (_) {}
+      layer.el.removeAttribute("src");
+      try { layer.el.load(); } catch (_) {}
+    }
+    if (layer.anim) { try { layer.anim.destroy(); } catch (_) {} }
+    layer.el.remove();
+  };
+
+  const swap = async (idx) => {
+    if (idx === activeIdx && idx === pendingIdx) return;
+    pendingIdx = idx;
     activeIdx = idx;
 
     thumbs.forEach((li, i) => {
@@ -1027,65 +1117,52 @@ const initCaseStudy = () => {
     });
     if (counterEl) counterEl.textContent = `${fmt(idx + 1)} / ${fmt(total)}`;
 
-    // Mobile : stage is `display: none`, so loading + decoding stage media is pure waste
-    // (battery, bandwidth). The thumbs themselves are the gallery in that layout.
+    // Mobile : stage is `display: none` — don't fetch media at all.
     if (getComputedStyle(stage).display === "none") {
-      try { videoEl.pause(); } catch (_) {}
-      videoEl.removeAttribute("src"); videoEl.load();
+      if (currentLayer) { destroyLayer(currentLayer); currentLayer = null; }
       return;
     }
 
     const li = thumbs[idx];
     const src = li?.dataset.stageSrc || "";
+    const nextLayer = buildLayer(src);
 
-    // Always reset all layers so we don't pile up.
-    imgEl.classList.remove("active");
-    videoEl.classList.remove("active");
-    try { videoEl.pause(); } catch (_) {}
-    if (lottieEl) {
-      lottieEl.classList.remove("active");
-      if (lottieAnim) { try { lottieAnim.stop(); } catch (_) {} }
-    }
-
-    if (!src) {
-      // Placeholder thumbnail — keep stage empty (frame bg shows).
-      imgEl.removeAttribute("src");
-      videoEl.removeAttribute("src");
-      videoEl.load();
-      return;
-    }
-
-    if (VIDEO_RE.test(src)) {
-      videoEl.src = src;
-      videoEl.play().catch(() => {});
-      videoEl.classList.add("active");
-    } else if (LOTTIE_RE.test(src)) {
-      if (!lottieEl) {
-        lottieEl = document.createElement("div");
-        lottieEl.className = "stage-media stage-lottie";
-        lottieEl.setAttribute("aria-hidden", "true");
-        stage.appendChild(lottieEl);
+    if (nextLayer) {
+      // Insert BENEATH the current layer so the outgoing dissolves above it.
+      if (currentLayer?.el && currentLayer.el.parentNode === stage) {
+        stage.insertBefore(nextLayer.el, currentLayer.el);
+      } else if (counterEl) {
+        stage.insertBefore(nextLayer.el, counterEl);
+      } else {
+        stage.appendChild(nextLayer.el);
       }
-      Promise.all([loadLottieLib(), fetchLottieData(src)]).then(([lottie, data]) => {
-        if (activeIdx !== idx) return;
-        if (lottieAnim) { try { lottieAnim.destroy(); } catch (_) {} lottieAnim = null; }
-        lottieEl.innerHTML = "";
-        lottieAnim = lottie.loadAnimation({
-          container: lottieEl,
-          renderer: "svg",
-          loop: true,
-          autoplay: true,
-          animationData: data,
-          rendererSettings: { preserveAspectRatio: "xMidYMid slice" },
-        });
-        lottieEl.classList.add("active");
-      }).catch(() => {});
-    } else {
-      imgEl.addEventListener("load", () => {
-        if (activeIdx === idx) imgEl.classList.add("active");
-      }, { once: true });
-      imgEl.src = src;
     }
+
+    await whenReady(nextLayer);
+
+    // A newer swap raced ahead — drop this one cleanly.
+    if (pendingIdx !== idx) { destroyLayer(nextLayer); return; }
+
+    if (nextLayer?.type === "video") {
+      try { await nextLayer.el.play(); } catch (_) {}
+    }
+
+    // Two rAFs : let the initial styles commit before flipping to .active,
+    // so the transform/blur/opacity actually animate instead of snapping.
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (pendingIdx !== idx) { destroyLayer(nextLayer); return; }
+      const outgoing = currentLayer;
+      if (nextLayer?.el) nextLayer.el.classList.add("active");
+      currentLayer = nextLayer;
+      if (outgoing?.el) {
+        outgoing.el.classList.remove("active");
+        outgoing.el.classList.add("leaving");
+        const cleanup = () => destroyLayer(outgoing);
+        outgoing.el.addEventListener("transitionend", cleanup, { once: true });
+        // Fallback in case transitionend never fires (tab hidden, prefers-reduced-motion edge cases).
+        setTimeout(cleanup, 1200);
+      }
+    }));
   };
 
   // Pick the active thumb. Vertical (desktop) : closest to viewport center.
