@@ -664,8 +664,34 @@ body.no-scroll { overflow: hidden; }
 }
 .preview:has(.preview-media.active) .preview-label { opacity: 0; }
 
+/* Mobile / touch — replaces the cursor-follow card with a fixed mini preview
+   pinned at bottom-right. Reads as a passive companion to scrolling : the
+   item closest to viewport center drives it, fades out near the page edges. */
+.preview.scroll {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  width: 38vw;
+  max-width: 200px;
+  z-index: 40;
+  opacity: 0;
+  transform: translate3d(0, 12px, 0) scale(0.94);
+  transition:
+    opacity 0.28s var(--ease),
+    transform 0.32s var(--ease-out);
+}
+.preview.scroll.show {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+}
+.preview.scroll .preview-label { font-size: 0.95rem; }
+
 @media (hover: none) {
-  .preview { display: none !important; }
+  .preview.cursor,
+  .preview.anchored { display: none !important; }
+}
+@media (hover: hover) {
+  .preview.scroll { display: none !important; }
 }
 
 /* ——— Prose / generic pages ——— */
@@ -1192,6 +1218,33 @@ button.case-cta {
     filter 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
+/* Sticky close affordance — only surfaces on layouts where the panel is fixed
+   full-screen and the in-sidebar toggle is unreachable (mobile + tablet). */
+.case-detail__close {
+  display: none;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  align-self: flex-start;
+  margin: 0;
+  padding: calc(var(--unit) * 3) var(--case-gutter);
+  width: 100%;
+  text-align: left;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: saturate(1.4) blur(10px);
+  -webkit-backdrop-filter: saturate(1.4) blur(10px);
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.2s var(--ease);
+}
+.case-detail__close:hover { color: var(--text); }
+
 /* Mobile — full-screen overlay anchored to the chrome */
 @media (max-width: 767px) {
   .case-detail {
@@ -1205,11 +1258,15 @@ button.case-cta {
     background: var(--bg);
     z-index: 50;
   }
+  .case-detail__scroll {
+    padding-top: 0;
+  }
   .case-detail__inner {
-    padding: 0 var(--case-gutter);
+    padding: calc(var(--unit) * 6) var(--case-gutter) 0;
     gap: calc(var(--unit) * 10);
   }
   .case-detail__section h2 { font-size: 1.375rem; }
+  .case-detail__close { display: block; }
 }
 
 /* Tablet — full overlay across the single-screen layout */
@@ -1226,7 +1283,9 @@ button.case-cta {
     background: var(--bg);
     z-index: 50;
   }
-  .case-detail__inner { padding: 0 calc(var(--unit) * 6); }
+  .case-detail__scroll { padding-top: 0; }
+  .case-detail__inner { padding: calc(var(--unit) * 6) calc(var(--unit) * 6) 0; }
+  .case-detail__close { display: block; padding: calc(var(--unit) * 3) calc(var(--unit) * 6); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1307,12 +1366,19 @@ button.case-cta {
   .case-bar__next { grid-column: 7 / span 6; }
   .case-bar__next-name { display: inline-block; max-width: 22ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
 
+  /* Reset implicit grid placement so meta + thumbs stack vertically.
+     Desktop pins both to grid-row: 1 — without this reset they overlap. */
   .case-grid { grid-template-columns: 1fr; row-gap: calc(var(--unit) * 8); }
   .case-meta,
+  .case-thumbs,
+  .case-stage { grid-column: 1; grid-row: auto; }
+  .case-meta,
   .case-stage { position: static; height: auto; padding: calc(var(--unit) * 4) 0; }
-  .case-meta { grid-column: 1; }
   .case-stage { display: none; }
-  .case-thumbs { grid-column: 1; padding: 0; gap: calc(var(--unit) * 8); }
+  /* Generous bottom breath — Ive/Newson : let the last thumb resolve into
+     space rather than collide with the viewport edge. Roughly a quarter of
+     the viewport, scales with device. */
+  .case-thumbs { padding: 0 0 25vh; gap: calc(var(--unit) * 8); }
   .thumb-frame { aspect-ratio: 16 / 10; }
 }
 

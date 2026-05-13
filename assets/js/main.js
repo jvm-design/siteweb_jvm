@@ -117,6 +117,54 @@ const makeLottieEl = (url, className) => {
   return div;
 };
 
+/* Pause animated media while it's outside the viewport. Saves decode work
+   when many thumbs render at once, and matches the "trigger on view" expectation
+   on touch devices where there is no hover affordance. */
+const _visibilityObserver = (() => {
+  if (typeof IntersectionObserver === "undefined") return null;
+  return new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        const el = entry.target;
+        const visible = entry.isIntersecting;
+        if (el.tagName === "VIDEO") {
+          if (visible) {
+            el.play().catch(() => {});
+          } else {
+            try { el.pause(); } catch (_) {}
+          }
+        } else if (el._lottieAnim) {
+          try {
+            if (visible) el._lottieAnim.play();
+            else el._lottieAnim.pause();
+          } catch (_) {}
+        }
+      });
+    },
+    { rootMargin: "0px", threshold: 0.1 }
+  );
+})();
+
+const gateMediaToVisibility = (el) => {
+  if (!_visibilityObserver || !el) return;
+  if (el.tagName === "VIDEO") {
+    el.removeAttribute("autoplay");
+  } else if (!el.classList.contains("preview-lottie-host")) {
+    return;
+  }
+  // Synchronous initial state — IntersectionObserver's first callback is
+  // async, and on some embedded webviews it never fires for elements that
+  // are already laid out. Seeding playback here means we never get stuck
+  // on a paused video that should be running.
+  const r = el.getBoundingClientRect();
+  const visible = r.bottom > 0 && r.top < (window.innerHeight || 0);
+  if (el.tagName === "VIDEO") {
+    if (visible) el.play().catch(() => {});
+    else { try { el.pause(); } catch (_) {} }
+  }
+  _visibilityObserver.observe(el);
+};
+
 const makePreviewMedia = (url, className) => {
   const ext = previewExt(url);
   if (PREVIEW_LOTTIE_EXTS.has(ext)) return makeLottieEl(url, className);
@@ -282,6 +330,8 @@ const applyPreviewConvention = async () => {
   });
 
   // 2) Case-study thumbs — stage media + (optional) static thumb frame.
+  //    Animated media only plays while the thumb is in view, so we don't
+  //    burn battery decoding a dozen offscreen videos in parallel.
   const csSlug = document.body.dataset.slug;
   if (csSlug) {
     document.querySelectorAll(".case-thumbs > li").forEach((li, i) => {
@@ -304,6 +354,7 @@ const applyPreviewConvention = async () => {
             if (media) {
               frame.style.background = "#000";
               frame.appendChild(media);
+              gateMediaToVisibility(media);
             }
           }
         }
@@ -367,13 +418,127 @@ const canHover = matchMedia("(hover: hover)").matches;
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 const initPreview = () => {
-  if (!canHover || reducedMotion) return;
+  if (reducedMotion) return;
   // Skip when only craft-list items remain (those use inline thumbs + overlay).
   const targets = [...document.querySelectorAll("[data-preview]")].filter(
     (el) => !el.closest(".list.craft")
   );
   if (!targets.length) return;
-  _buildPreview();
+  if (canHover) _buildPreview();
+  else _buildScrollPreview(targets);
+};
+
+/* Mobile / touch fallback for the home hover preview. No cursor, so the
+   item closest to the viewport center drives a fixed mini preview card.
+   Stays consistent with the desktop affordance — same media, same label —
+   but reads as a passive companion to scrolling, not an interaction. */
+const _buildScrollPreview = (targets) => {
+  const preview = document.createElement("div");
+  preview.className = "preview scroll";
+  preview.innerHTML = `
+    <div class="preview-inner">
+      <video class="preview-media preview-video" muted loop playsinline preload="metadata" aria-hidden="true"></video>
+      <img class="preview-media preview-img" alt="" />
+      <div class="preview-media preview-lottie" aria-hidden="true"></div>
+      <span class="preview-label"></span>
+    </div>
+  `;
+  document.body.appendChild(preview);
+  const labelEl = preview.querySelector(".preview-label");
+  const videoEl = preview.querySelector(".preview-video");
+  const imgEl = preview.querySelector(".preview-img");
+  const lottieEl = preview.querySelector(".preview-lottie");
+
+  const VIDEO_RE = /\.(mp4|webm|mov|ogg|ogv)(\?|#|$)/i;
+  const LOTTIE_RE = /\.(json|lottie)(\?|#|$)/i;
+  let lottieAnim = null;
+  let active = null;
+  let activeSrc = null;
+
+  const clearMedia = () => {
+    videoEl.classList.remove("active");
+    imgEl.classList.remove("active");
+    lottieEl.classList.remove("active");
+    try { videoEl.pause(); } catch (_) {}
+    videoEl.removeAttribute("src"); videoEl.load();
+    imgEl.removeAttribute("src");
+    if (lottieAnim) { try { lottieAnim.destroy(); } catch (_) {} lottieAnim = null; }
+    lottieEl.innerHTML = "";
+  };
+
+  const swap = (el) => {
+    if (el === active) return;
+    active = el;
+    if (!el) {
+      preview.classList.remove("show");
+      activeSrc = null;
+      // Defer media reset so the fade-out reads as a single beat.
+      setTimeout(() => { if (!active) clearMedia(); }, 280);
+      return;
+    }
+    preview.classList.add("show");
+    preview.style.background = el.dataset.previewBg || "#111";
+    labelEl.textContent = el.dataset.previewLabel || "";
+    const src = el.dataset.previewSrc;
+    if (src === activeSrc) return;
+    activeSrc = src;
+    clearMedia();
+    if (!src) return;
+
+    if (VIDEO_RE.test(src)) {
+      videoEl.addEventListener("loadeddata", () => {
+        if (active === el) videoEl.classList.add("active");
+      }, { once: true });
+      videoEl.src = src;
+      videoEl.play().catch(() => {});
+    } else if (LOTTIE_RE.test(src)) {
+      loadLottieLib().then(async (lottie) => {
+        if (active !== el) return;
+        let data;
+        try { data = await fetchLottieData(src); } catch (_) { return; }
+        if (active !== el) return;
+        lottieAnim = lottie.loadAnimation({
+          container: lottieEl,
+          renderer: "svg",
+          loop: true,
+          autoplay: true,
+          animationData: data,
+          rendererSettings: { preserveAspectRatio: "xMidYMid slice" },
+        });
+        lottieEl.classList.add("active");
+      }).catch(() => {});
+    } else {
+      imgEl.addEventListener("load", () => {
+        if (active === el) imgEl.classList.add("active");
+      }, { once: true });
+      imgEl.src = src;
+    }
+  };
+
+  let rafId = null;
+  const pick = () => {
+    rafId = null;
+    const center = window.innerHeight / 2;
+    let best = null, bestDist = Infinity;
+    for (const el of targets) {
+      const r = el.getBoundingClientRect();
+      if (r.bottom < 0 || r.top > window.innerHeight) continue;
+      const c = r.top + r.height / 2;
+      const d = Math.abs(c - center);
+      if (d < bestDist) { bestDist = d; best = el; }
+    }
+    // Generous tolerance — if any candidate is within ~half a viewport, show it.
+    if (best && bestDist < window.innerHeight * 0.5) swap(best);
+    else swap(null);
+  };
+
+  const onScroll = () => {
+    if (rafId) return;
+    rafId = requestAnimationFrame(pick);
+  };
+  window.addEventListener("scroll", onScroll, { passive: true });
+  window.addEventListener("resize", onScroll, { passive: true });
+  pick();
 };
 
 const _buildPreview = () => {
@@ -726,6 +891,14 @@ const initCaseStudy = () => {
     });
     if (counterEl) counterEl.textContent = `${fmt(idx + 1)} / ${fmt(total)}`;
 
+    // Mobile : stage is `display: none`, so loading + decoding stage media is pure waste
+    // (battery, bandwidth). The thumbs themselves are the gallery in that layout.
+    if (getComputedStyle(stage).display === "none") {
+      try { videoEl.pause(); } catch (_) {}
+      videoEl.removeAttribute("src"); videoEl.load();
+      return;
+    }
+
     const li = thumbs[idx];
     const src = li?.dataset.stageSrc || "";
 
@@ -873,6 +1046,20 @@ const initCaseDetail = () => {
       setOpen(false);
     }
   });
+
+  // Mobile / tablet : the panel is `position: fixed` and covers the toggle,
+  // so the user has no way back. Inject a sticky close affordance at the top
+  // of the scroll. Hidden on desktop where the in-place toggle is reachable.
+  const inner = scroller.querySelector(".case-detail__inner");
+  if (inner && !scroller.querySelector("[data-detail-close]")) {
+    const close = document.createElement("button");
+    close.type = "button";
+    close.className = "case-detail__close";
+    close.setAttribute("data-detail-close", "");
+    close.textContent = "← Revenir à la galerie";
+    scroller.insertBefore(close, inner);
+    close.addEventListener("click", () => setOpen(false));
+  }
 };
 
 initExperienceFilter();
