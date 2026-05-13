@@ -665,26 +665,31 @@ body.no-scroll { overflow: hidden; }
 .preview:has(.preview-media.active) .preview-label { opacity: 0; }
 
 /* Mobile / touch — replaces the cursor-follow card with a fixed mini preview
-   pinned at bottom-right. Reads as a passive companion to scrolling : the
-   item closest to viewport center drives it, fades out near the page edges. */
+   pinned at bottom-right. The finger drives the swap (drag over list items),
+   then the card holds 1.5s post-release before retiring. Snappier media
+   cross-fade than desktop : the finger moves faster than a cursor, so the
+   transition has to keep up. */
 .preview.scroll {
   position: fixed;
   right: 1rem;
   bottom: 1rem;
-  width: 38vw;
-  max-width: 200px;
+  width: 42vw;
+  max-width: 220px;
   z-index: 40;
   opacity: 0;
   transform: translate3d(0, 12px, 0) scale(0.94);
   transition:
-    opacity 0.28s var(--ease),
-    transform 0.32s var(--ease-out);
+    opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.36s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .preview.scroll.show {
   opacity: 1;
   transform: translate3d(0, 0, 0) scale(1);
 }
 .preview.scroll .preview-label { font-size: 0.95rem; }
+.preview.scroll .preview-media {
+  transition: opacity 0.22s var(--ease);
+}
 
 @media (hover: none) {
   .preview.cursor,

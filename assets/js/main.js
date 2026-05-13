@@ -165,6 +165,79 @@ const gateMediaToVisibility = (el) => {
   _visibilityObserver.observe(el);
 };
 
+/* Middle-band observer — fires when an element enters / exits the central
+   third of the viewport (vertically and horizontally). On touch, this is
+   the "play trigger" for tiles that would otherwise stay frozen on their
+   idle frame (no hover affordance). The narrow band ensures only the item
+   the user is actually looking at animates — restraint, not noise. */
+const _middleBandObserver = (() => {
+  if (typeof IntersectionObserver === "undefined") return null;
+  return new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        const cb = entry.target._onMiddleBand;
+        if (cb) cb(entry.isIntersecting);
+      });
+    },
+    { rootMargin: "-33% -25% -33% -25%", threshold: 0 }
+  );
+})();
+
+const onMiddleBand = (el, callback) => {
+  if (!_middleBandObserver || !el) return;
+  el._onMiddleBand = callback;
+  _middleBandObserver.observe(el);
+};
+
+/* Same shape as gateMediaToVisibility but bound to the middle-band observer.
+   The case-study thumb rail is intentionally a focal medium : only the item
+   the user is actually looking at should animate. On mobile this means one
+   video at a time decodes ; on tablet/desktop the play state aligns with
+   the "active thumb" that drives the stage swap. */
+const gateMediaToMiddleBand = (el) => {
+  if (!_middleBandObserver || !el) return;
+  const isVideo = el.tagName === "VIDEO";
+  const isLottie = el.classList.contains("preview-lottie-host");
+  if (!isVideo && !isLottie) return;
+  if (isVideo) el.removeAttribute("autoplay");
+
+  let lastInBand = false;
+  const apply = (inBand) => {
+    lastInBand = inBand;
+    if (isVideo) {
+      if (inBand) el.play().catch(() => {});
+      else { try { el.pause(); } catch (_) {} }
+    } else if (el._lottieAnim) {
+      try {
+        if (inBand) el._lottieAnim.play();
+        else el._lottieAnim.pause();
+      } catch (_) {}
+    }
+  };
+
+  // Seed initial state synchronously — the observer's first callback is
+  // async and unreliable on some embedded webviews for already-laid-out els.
+  const r = el.getBoundingClientRect();
+  const vh = window.innerHeight || 1;
+  const vw = window.innerWidth || 1;
+  const inBand =
+    r.top < vh * 0.67 && r.bottom > vh * 0.33 &&
+    r.left < vw * 0.75 && r.right > vw * 0.25;
+  apply(inBand);
+
+  // Lottie loads async — re-apply once the animation instance attaches.
+  if (isLottie && !el._lottieAnim) {
+    const start = Date.now();
+    const tick = () => {
+      if (el._lottieAnim) apply(lastInBand);
+      else if (Date.now() - start < 5000) setTimeout(tick, 100);
+    };
+    setTimeout(tick, 100);
+  }
+
+  onMiddleBand(el, apply);
+};
+
 const makePreviewMedia = (url, className) => {
   const ext = previewExt(url);
   if (PREVIEW_LOTTIE_EXTS.has(ext)) return makeLottieEl(url, className);
@@ -195,8 +268,9 @@ const applyPreviewConvention = async () => {
 
   // 1) Craft list tiles (work.html). Static formats render persistently.
   //    Animated formats (video / Lottie) render their last frame as idle
-  //    state and only play on hover (desktop). On touch / reduced-motion the
-  //    last frame stays visible without playback.
+  //    state. Desktop : hover plays from start. Touch : scroll-driven, the
+  //    tile plays once it crosses the middle band of the viewport — gives
+  //    the page momentum on scroll without needing a hover affordance.
   document.querySelectorAll(".list.craft .list-item[id]").forEach((li) => {
     const a = li.querySelector("a");
     const thumb = li.querySelector(".thumb");
@@ -210,6 +284,7 @@ const applyPreviewConvention = async () => {
       const isLottie = PREVIEW_LOTTIE_EXTS.has(ext);
       const isMaybeAnimImg = ext === "gif" || ext === "webp";
       const hoverPlayable = canHover && !reducedMotion;
+      const scrollPlayable = !canHover && !reducedMotion;
       if (!isVideo && !isLottie && !isMaybeAnimImg) {
         const media = makePreviewMedia(url, "thumb-media");
         if (!media) return;
@@ -250,6 +325,21 @@ const applyPreviewConvention = async () => {
             live.remove();
             live = null;
           });
+        } else if (scrollPlayable) {
+          let live = null;
+          onMiddleBand(li, (inBand) => {
+            if (inBand && !live) {
+              live = document.createElement("img");
+              live.className = "thumb-media";
+              live.alt = "";
+              live.decoding = "async";
+              live.src = url;
+              thumb.appendChild(live);
+            } else if (!inBand && live) {
+              live.remove();
+              live = null;
+            }
+          });
         }
         return;
       }
@@ -280,6 +370,18 @@ const applyPreviewConvention = async () => {
             try { v.pause(); } catch (_) {}
             v.loop = false;
             seekToEnd();
+          });
+        } else if (scrollPlayable) {
+          onMiddleBand(li, (inBand) => {
+            if (inBand) {
+              v.loop = true;
+              try { v.currentTime = 0; } catch (_) {}
+              v.play().catch(() => {});
+            } else {
+              try { v.pause(); } catch (_) {}
+              v.loop = false;
+              seekToEnd();
+            }
           });
         }
         return;
@@ -324,14 +426,27 @@ const applyPreviewConvention = async () => {
             try { anim.loop = false; } catch (_) {}
             goToIdle();
           });
+        } else if (scrollPlayable) {
+          onMiddleBand(li, (inBand) => {
+            try {
+              if (inBand) {
+                anim.loop = true;
+                anim.goToAndPlay(0, true);
+              } else {
+                anim.loop = false;
+                goToIdle();
+              }
+            } catch (_) {}
+          });
         }
       }).catch(() => {});
     })());
   });
 
   // 2) Case-study thumbs — stage media + (optional) static thumb frame.
-  //    Animated media only plays while the thumb is in view, so we don't
-  //    burn battery decoding a dozen offscreen videos in parallel.
+  //    Animated media only plays while the thumb sits in the middle band of
+  //    the viewport. On mobile : one video at a time. On tablet/desktop :
+  //    matches the "active thumb" semantics that drive the stage swap.
   const csSlug = document.body.dataset.slug;
   if (csSlug) {
     document.querySelectorAll(".case-thumbs > li").forEach((li, i) => {
@@ -354,7 +469,7 @@ const applyPreviewConvention = async () => {
             if (media) {
               frame.style.background = "#000";
               frame.appendChild(media);
-              gateMediaToVisibility(media);
+              gateMediaToMiddleBand(media);
             }
           }
         }
@@ -413,8 +528,12 @@ document.querySelectorAll(".list").forEach((list) => {
   window.addEventListener("resize", () => { if (focused) move(focused); });
 });
 
-/* Cursor-follow preview — shows a gradient card with the project label. */
-const canHover = matchMedia("(hover: hover)").matches;
+/* Cursor-follow preview — shows a gradient card with the project label.
+   `?forceTouch=1` URL flag forces canHover=false so we can verify the mobile
+   path (touch preview, scroll-driven tile animations) on desktop, since
+   matchMedia hover can't be emulated. */
+const canHover = !location.search.includes("forceTouch=1")
+  && matchMedia("(hover: hover)").matches;
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 const initPreview = () => {
@@ -425,14 +544,16 @@ const initPreview = () => {
   );
   if (!targets.length) return;
   if (canHover) _buildPreview();
-  else _buildScrollPreview(targets);
+  else _buildTouchPreview(targets);
 };
 
-/* Mobile / touch fallback for the home hover preview. No cursor, so the
-   item closest to the viewport center drives a fixed mini preview card.
-   Stays consistent with the desktop affordance — same media, same label —
-   but reads as a passive companion to scrolling, not an interaction. */
-const _buildScrollPreview = (targets) => {
+/* Mobile / touch fallback for the home hover preview. The card pins to the
+   bottom-right and tracks which item the finger is over (pointerenter fires
+   on drag-into, same as the cursor-follow on desktop).
+   Ive/Newson motion intent : confident fade-in on contact, snappy media
+   cross-fade while the finger glides, then a deliberate hold-after-release
+   so the eye can settle on the last item before the card retires. */
+const _buildTouchPreview = (targets) => {
   const preview = document.createElement("div");
   preview.className = "preview scroll";
   preview.innerHTML = `
@@ -515,30 +636,45 @@ const _buildScrollPreview = (targets) => {
     }
   };
 
-  let rafId = null;
-  const pick = () => {
-    rafId = null;
-    const center = window.innerHeight / 2;
-    let best = null, bestDist = Infinity;
-    for (const el of targets) {
-      const r = el.getBoundingClientRect();
-      if (r.bottom < 0 || r.top > window.innerHeight) continue;
-      const c = r.top + r.height / 2;
-      const d = Math.abs(c - center);
-      if (d < bestDist) { bestDist = d; best = el; }
-    }
-    // Generous tolerance — if any candidate is within ~half a viewport, show it.
-    if (best && bestDist < window.innerHeight * 0.5) swap(best);
-    else swap(null);
+  // Hold-after-release : when the finger lifts or wanders off the list, keep
+  // the current preview visible for a beat so the eye can settle on the last
+  // item before the card retires. Confidence over haste — pure Ive/Newson.
+  const HOLD_MS = 1500;
+  let holdTimer = null;
+  const cancelHold = () => { if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; } };
+  const scheduleHold = () => {
+    cancelHold();
+    holdTimer = setTimeout(() => { holdTimer = null; swap(null); }, HOLD_MS);
   };
 
-  const onScroll = () => {
-    if (rafId) return;
-    rafId = requestAnimationFrame(pick);
+  // Resolve which target sits under a screen point. We can't trust
+  // pointerenter on touch — the initial touch captures the pointer, so
+  // subsequent moves don't bubble enter events on items the finger glides
+  // over. Reading elementFromPoint each move recovers the desktop-hover
+  // semantics for touch.
+  const targetUnder = (x, y) => {
+    const el = document.elementFromPoint(x, y);
+    if (!el) return null;
+    return targets.find((t) => t === el || t.contains(el)) || null;
   };
-  window.addEventListener("scroll", onScroll, { passive: true });
-  window.addEventListener("resize", onScroll, { passive: true });
-  pick();
+
+  const onPointerActivity = (e) => {
+    if (e.pointerType !== "touch") return;
+    const t = targetUnder(e.clientX, e.clientY);
+    if (t) { cancelHold(); swap(t); }
+    else { scheduleHold(); }
+  };
+
+  document.addEventListener("pointerdown", onPointerActivity, { passive: true });
+  document.addEventListener("pointermove", onPointerActivity, { passive: true });
+  document.addEventListener("pointerup", (e) => {
+    if (e.pointerType !== "touch") return;
+    scheduleHold();
+  }, { passive: true });
+  document.addEventListener("pointercancel", (e) => {
+    if (e.pointerType !== "touch") return;
+    scheduleHold();
+  }, { passive: true });
 };
 
 const _buildPreview = () => {
