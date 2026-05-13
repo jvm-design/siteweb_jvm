@@ -1,0 +1,75 @@
+# Jaime Villegas Maira
+
+> Lead Product Designer & Product Manager chez TNS (The Next Stories), éditeur du SaaS automotive B2B/B2C Autoya. Basé à Nantes, France. 12+ ans d'expérience à la croisée du design produit et du management.
+
+## Identité
+
+- **Nom complet** : Jaime Villegas Maira
+- **Alias** : JVM
+- **Rôle actuel** : Lead Product Designer & Product Manager
+- **Employeur** : TNS (The Next Stories) — éditeur du SaaS automotive Autoya
+- **Localisation** : Nantes, France
+- **Langues** : espagnol (langue maternelle), français (C2), anglais (C1)
+- **Site canonique** : https://jaime-vm.com
+
+## Glossaire d'acronymes
+
+- **TNS** = The Next Stories (entreprise française, éditeur d'Autoya)
+- **PM** = Product Manager
+- **JVM** = Jaime Villegas Maira
+- **QSR** = Quick Service Restaurant (restauration rapide)
+- **POS** = Point of Sale (caisse / système d'encaissement)
+- **DMS** = Dealer Management System (gestion concessionnaire automobile)
+- **DS** = Design System
+- **BI** = Business Intelligence
+
+## Profil
+
+Profil hybride design / produit / leadership : pilotage de vision, design systems, delivery end-to-end, en équipes pluridisciplinaires (back, front, mobile, design). Expertise terrain en food tech (Merim), mobilité urbaine (Heetch), culture (Pass Culture), FinTech / crypto (Eximion) et automotive (TNS / Autoya).
+
+## Pages principales
+
+- [Accueil](https://jaime-vm.com/) : présentation, liste des expériences récentes
+- [À propos](https://jaime-vm.com/pages/about.html) : parcours, méthodes, compétences, FAQ
+- [Projets](https://jaime-vm.com/pages/work.html) : portfolio complet des études de cas
+- [Contact](https://jaime-vm.com/pages/contact.html) : email, téléphone, LinkedIn, GitHub
+
+## Études de cas — TNS (The Next Stories) / Autoya (2025–présent)
+
+- [Autoya — Webapp](https://jaime-vm.com/pages/work/autoya-webapp.html) : Plateforme SaaS B2B pour concessionnaires automobiles. Lead Product Designer & Product Manager, seul designer/Product Manager sur le projet, en binôme avec le CTO. React 19 / TypeScript, Feature-Sliced Design, design system monochrome.
+- [Autoya — Mobile](https://jaime-vm.com/pages/work/autoya-mobile.html) : App mobile iOS / Android pour vendeurs en concession. Flutter, design system partagé avec la webapp, publication App Store & Google Play décembre 2025.
+
+## Études de cas — Merim Groupe (2023–2024)
+
+- [Design system](https://jaime-vm.com/pages/work/merim-design-system.html) : tokens, composants, documentation. Première embauche design du groupe.
+- [Module Caisse](https://jaime-vm.com/pages/work/merim-caisse.html) : POS (point of sale) restauration rapide, refonte sans réapprentissage du geste.
+- [Module Reporting](https://jaime-vm.com/pages/work/merim-reporting.html) : BI & analytics restaurant.
+- [Module Drive-thru](https://jaime-vm.com/pages/work/merim-drive-thru.html) : performance opérationnelle drive QSR (quick service restaurant).
+
+## Études de cas — The Design Crew (2023, agence)
+
+- [Pass Culture](https://jaime-vm.com/pages/work/tdc-passculture.html) : rétention des 15–17 ans après épuisement du crédit culturel.
+- [Heetch](https://jaime-vm.com/pages/work/tdc-heetch.html) : intégration trottinette dans l'app mobilité.
+- [Vendredi](https://jaime-vm.com/pages/work/tdc-vendredi.html) : engagement RSE collaborateurs.
+
+## Études de cas — Freelance
+
+- [Eximion](https://jaime-vm.com/pages/work/eximion.html) (2022–23) : MVP plateforme d'investissement crypto / FinTech.
+- [RestoApp](https://jaime-vm.com/pages/work/restoapp.html) (2025) : app mobile iOS food tech.
+
+## Side projects
+
+- [Tie Break](https://jaime-vm.com/pages/work/tie-break.html) (2023) : app iOS padel.
+
+## Engagement communauté
+
+- FrenchProduit (2025–présent) : bénévole, speaker FLUPA Nantes 2025.
+
+## Contact
+
+- **Email** : jaime.vile@gmail.com
+- **Téléphone** : +33 6 52 05 72 39
+- **Localisation** : Nantes, France
+- **LinkedIn** : https://www.linkedin.com/in/jaimevillegasmaira/
+- **GitHub** : https://github.com/jvm-design
+- **Behance** (archives, pas à jour) : https://www.behance.net/jvillegasmaira
