@@ -438,6 +438,8 @@ body { line-height: var(--lh-base); }
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.02em;
   align-self: baseline;
+  width: max-content;
+  white-space: nowrap;
 }
 
 @media (max-width: 640px) {
@@ -540,14 +542,19 @@ body.no-scroll { overflow: hidden; }
   opacity: 0;
   pointer-events: none;
   z-index: 0;
+  /* width/height kept slightly shorter than transform so the size lands
+     before the slide settles — avoids a perceptible reflow cascade when
+     hovering rapidly across items of different sizes. */
   transition:
     opacity 0.25s var(--ease),
     transform 0.4s var(--ease),
-    width 0.4s var(--ease),
-    height 0.4s var(--ease);
-  will-change: transform, width, height;
+    width 0.25s var(--ease),
+    height 0.25s var(--ease);
 }
-.list:hover .glass { opacity: 1; }
+.list:hover .glass {
+  opacity: 1;
+  will-change: transform;
+}
 
 @media (prefers-color-scheme: dark) {
   .glass {
@@ -595,9 +602,13 @@ body.no-scroll { overflow: hidden; }
   box-shadow:
     0 22px 50px -22px rgba(0, 0, 0, 0.35),
     0 8px 20px -10px rgba(0, 0, 0, 0.2);
+}
+.preview.show {
+  opacity: 1;
+  /* Promoted only while visible. Keeping will-change permanent on a fixed
+     element forced the browser to retain an unused GPU layer on every page. */
   will-change: transform, opacity, filter;
 }
-.preview.show { opacity: 1; }
 
 .preview.cursor {
   position: fixed;
@@ -963,6 +974,30 @@ body.no-scroll { overflow: hidden; }
 .case-thumbs > li[data-active] .thumb-num,
 .case-thumbs > li[data-active] figcaption { color: var(--text); }
 
+/* Active thumb signature — Ive/Newson : a single deliberate beat when the
+   thumb takes over the stage. Subtle scale + soft depth, slow ease so the
+   eye reads "selected" rather than "animated". Composes cleanly with the
+   inner image's Ken Burns (separate element). */
+.case-thumbs > li .thumb-frame {
+  transition:
+    transform 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+.case-thumbs > li[data-active] .thumb-frame {
+  transform: scale(1.03);
+  box-shadow:
+    0 14px 36px -18px rgba(0, 0, 0, 0.55),
+    0 6px 14px -10px rgba(0, 0, 0, 0.3);
+}
+@media (prefers-reduced-motion: reduce) {
+  .case-thumbs > li .thumb-frame,
+  .case-thumbs > li[data-active] .thumb-frame {
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
 /* Stage : sticky right, the revealed object — monumental, not modest.
    Left padding creates editorial breath against the thumbs spine. */
 .case-stage {
@@ -995,9 +1030,12 @@ body.no-scroll { overflow: hidden; }
   opacity: 0;
   transform: scale(1.02);
   filter: blur(6px);
+  /* Unified duration: cascading durations (0.7/1.1/0.8) made opacity finish
+     before transform/filter, producing a perceptible "drift" after the
+     image looked settled. Single 0.8s tempo across all three reads cleaner. */
   transition:
-    opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 1.1s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.8s cubic-bezier(0.16, 1, 0.3, 1),
     filter 0.8s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: opacity, transform, filter;
 }
@@ -1006,15 +1044,43 @@ body.no-scroll { overflow: hidden; }
   transform: scale(1);
   filter: blur(0);
 }
+/* Once the entry transition has run its course, drop the heavy compositing
+   flags. Chrome (and Safari) keep a GPU layer alive as long as `filter` /
+   `transform` / `will-change` are applied, which stalls GIF and video frame
+   decoding inside that layer — the symptom is a single frame stuck on
+   screen. Removing these on .settled releases the layer back to the
+   compositor so the media decodes at its native rate. */
+.stage-media.settled {
+  filter: none;
+  transform: none;
+  will-change: auto;
+  /* Snap the property changes: blur(0) → none and scale(1) → none don't
+     animate cleanly, and we don't want any visible re-paint at the moment
+     the GPU layer is released. */
+  transition: none;
+}
 .stage-media.leaving {
   opacity: 0;
   transform: scale(1);
   filter: blur(0);
   z-index: 1;
-  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 [data-slug="autoya-mobile"] .stage-frame,
 [data-slug="autoya-mobile"] .thumb-frame { aspect-ratio: 1 / 1; }
+
+/* Drive-thru monitoring video is portrait (720×956) — letterbox inside the
+   landscape frame so the whole UI is legible on mobile, no aggressive crop.
+   Both stage and thumb letterbox dissolve into the same page bg (#fafafa). */
+[data-slug="merim-drive-thru"] .stage-media,
+[data-slug="merim-drive-thru"] .thumb-frame img,
+[data-slug="merim-drive-thru"] .thumb-frame video {
+  object-fit: contain;
+  background: #fafafa;
+}
+[data-slug="merim-drive-thru"] .thumb-frame {
+  background: #fafafa;
+}
 .stage-counter {
   position: absolute;
   top: calc(var(--unit) * 1.5);
@@ -1316,6 +1382,43 @@ button.case-cta {
   .case-detail__close { display: block; padding: calc(var(--unit) * 3) calc(var(--unit) * 6); }
 }
 
+/* ——— Idle motion on still photos — Ive / Newson grammar.
+   Ive : time as a material. A 16s sine wave drives --kb-t (0..1..0) which
+   feeds a micro drift + scale, slow enough to read as "alive" rather than
+   "animated". Same heartbeat as the video tiles, no extra noise.
+   Newson : on hover the cursor sets --px-x / --px-y, a window-pane tilt
+   opposite the pointer. Composed into one transform so the two effects
+   add cleanly. Whole budget kept inside the safe slack of scale() so the
+   photo never reveals its edge. */
+@property --kb-t {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
+@keyframes kb-drift {
+  0%, 100% { --kb-t: 0; }
+  50%      { --kb-t: 1; }
+}
+.kb {
+  --kb-t: 0;
+  --px-x: 0px;
+  --px-y: 0px;
+  animation: kb-drift 16s ease-in-out infinite;
+  transform:
+    translate(
+      calc((var(--kb-t) - 0.5) * 1%   + var(--px-x)),
+      calc((var(--kb-t) - 0.5) * -0.8% + var(--px-y))
+    )
+    scale(calc(1.06 + (var(--kb-t) - 0.5) * 0.02));
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+/* Stage media owns its own opacity transition; .kb takes over transform
+   only after the entry transition has settled (JS sets the class then). */
+.stage-media.kb {
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .case-detail,
   .case-detail[data-open],
@@ -1330,6 +1433,10 @@ button.case-cta {
   .stage-media.leaving {
     transition: opacity 0.2s linear !important;
     filter: none !important;
+    transform: none !important;
+  }
+  .kb {
+    animation: none !important;
     transform: none !important;
   }
 }

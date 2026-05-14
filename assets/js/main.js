@@ -189,11 +189,67 @@ const onMiddleBand = (el, callback) => {
   _middleBandObserver.observe(el);
 };
 
+/* Note: an earlier revision installed a global MutationObserver on
+   document.body to auto-unobserve intersection observers when targets
+   left the DOM. It turned out to interfere with GIF decoding on
+   case-study pages — every stage swap was a body subtree mutation,
+   keeping the main thread busy enough that Chrome stalled frame
+   decoding. The "phantom callback" risk it guarded against is purely
+   theoretical here (observed elements stay alive for the page's life),
+   so we drop the watcher entirely. */
+
 /* Same shape as gateMediaToVisibility but bound to the middle-band observer.
    The case-study thumb rail is intentionally a focal medium : only the item
    the user is actually looking at should animate. On mobile this means one
    video at a time decodes ; on tablet/desktop the play state aligns with
    the "active thumb" that drives the stage swap. */
+/* Case-study thumb gate — drives play/pause off the `data-active` attribute
+   that `computeActive()` puts on the matching <li>. Same intent as the
+   middle-band gate (play only the focal item) but works on every layout :
+   desktop vertical centre, tablet/mobile horizontal start-snap. The middle
+   band assumed the rail crossed mid-viewport — false on tablet where the
+   rail sits pinned at the bottom and never enters the band. */
+const gateMediaToActiveAttr = (el, host) => {
+  if (!el || !host) return;
+  const isVideo = el.tagName === "VIDEO";
+  const isLottie = el.classList.contains("preview-lottie-host");
+  if (!isVideo && !isLottie) return;
+  if (isVideo) el.removeAttribute("autoplay");
+
+  const apply = (active) => {
+    if (isVideo) {
+      if (active) el.play().catch(() => {});
+      else { try { el.pause(); } catch (_) {} }
+    } else if (el._lottieAnim) {
+      try {
+        if (active) el._lottieAnim.play();
+        else el._lottieAnim.pause();
+      } catch (_) {}
+    }
+  };
+
+  // makePreviewMedia queues a follow-up v.play() via microtask to defeat
+  // browser autoplay heuristics. We have to apply our state AFTER that, or
+  // the inactive thumbs end up playing anyway. Sync apply seeds the visible
+  // state ; the microtask is the one that actually sticks.
+  const seed = () => apply(host.hasAttribute("data-active"));
+  seed();
+  queueMicrotask(seed);
+
+  const mo = new MutationObserver(seed);
+  mo.observe(host, { attributes: true, attributeFilter: ["data-active"] });
+
+  // Lottie attaches async — re-apply once the animation instance is ready.
+  if (isLottie && !el._lottieAnim) {
+    const start = Date.now();
+    const tick = () => {
+      if (el._lottieAnim) apply(host.hasAttribute("data-active"));
+      else if (Date.now() - start < 5000) setTimeout(tick, 100);
+    };
+    setTimeout(tick, 100);
+  }
+};
+
 const gateMediaToMiddleBand = (el) => {
   if (!_middleBandObserver || !el) return;
   const isVideo = el.tagName === "VIDEO";
@@ -263,6 +319,90 @@ const makePreviewMedia = (url, className) => {
   return img;
 };
 
+/* Idle motion on still photos — Ive/Newson grammar.
+   • Ken Burns : CSS @keyframes drives --kb-t (0..1..0 over 16s) which
+     interpolates a micro drift + scale in the transform. Random phase per
+     element so a row of tiles never beats in unison.
+   • Parallax : pointer position on the host updates --px-x / --px-y,
+     composed into the same transform so the two effects add. One rAF
+     loop per host, lerped, sleeps when settled. Mouse/pen only — touch
+     would just stick the photo to the finger. */
+const enableKenBurns = (img) => {
+  if (!img || reducedMotion) return;
+  if (img.classList.contains("kb")) return;
+  img.style.animationDelay = `${-Math.random() * 16}s`;
+  img.classList.add("kb");
+};
+
+const enableHoverParallax = (img, host, opts = {}) => {
+  if (!img || !host || !canHover || reducedMotion) return;
+  if (host._kbParallax) {
+    host._kbParallax.img = img;
+    return;
+  }
+  const state = {
+    img,
+    ampX: opts.ampX ?? 6,
+    ampY: opts.ampY ?? 5,
+    lerp: 0.12,
+    tx: 0, ty: 0, cx: 0, cy: 0, rafId: null,
+    rect: null,
+  };
+  host._kbParallax = state;
+  const write = () => {
+    const t = state.img;
+    if (!t) return;
+    t.style.setProperty("--px-x", state.cx.toFixed(2) + "px");
+    t.style.setProperty("--px-y", state.cy.toFixed(2) + "px");
+  };
+  const tick = () => {
+    state.cx += (state.tx - state.cx) * state.lerp;
+    state.cy += (state.ty - state.cy) * state.lerp;
+    write();
+    if (Math.abs(state.tx - state.cx) < 0.04 && Math.abs(state.ty - state.cy) < 0.04) {
+      state.cx = state.tx; state.cy = state.ty;
+      write();
+      state.rafId = null;
+      return;
+    }
+    state.rafId = requestAnimationFrame(tick);
+  };
+  const wake = () => { if (!state.rafId) state.rafId = requestAnimationFrame(tick); };
+
+  // Cache host rect — reading getBoundingClientRect on every pointermove forces
+  // a layout flush each frame. ResizeObserver + scroll fallback refresh it only
+  // when the actual geometry changes.
+  const refreshRect = () => { state.rect = host.getBoundingClientRect(); };
+  refreshRect();
+  if (typeof ResizeObserver !== "undefined") {
+    const ro = new ResizeObserver(refreshRect);
+    ro.observe(host);
+  }
+  // pointerenter is the right moment to re-read — host may have moved since last frame.
+  host.addEventListener("pointerenter", refreshRect, { passive: true });
+
+  host.addEventListener("pointermove", (e) => {
+    if (e.pointerType && e.pointerType !== "mouse" && e.pointerType !== "pen") return;
+    const r = state.rect;
+    if (!r || !r.width || !r.height) return;
+    const nx = (e.clientX - r.left) / r.width - 0.5;
+    const ny = (e.clientY - r.top) / r.height - 0.5;
+    // Inverted : photo leans away from the cursor (window-pane parallax).
+    state.tx = -nx * state.ampX;
+    state.ty = -ny * state.ampY;
+    wake();
+  }, { passive: true });
+  host.addEventListener("pointerleave", () => {
+    state.tx = 0; state.ty = 0;
+    wake();
+  });
+};
+
+const enhanceStill = (img, host, opts) => {
+  enableKenBurns(img);
+  if (host) enableHoverParallax(img, host, opts);
+};
+
 const applyPreviewConvention = async () => {
   const tasks = [];
 
@@ -290,6 +430,7 @@ const applyPreviewConvention = async () => {
         if (!media) return;
         thumb.textContent = "";
         thumb.appendChild(media);
+        if (media.tagName === "IMG") enhanceStill(media, a);
         return;
       }
       if (isMaybeAnimImg) {
@@ -300,6 +441,7 @@ const applyPreviewConvention = async () => {
           if (!media) return;
           thumb.textContent = "";
           thumb.appendChild(media);
+          if (media.tagName === "IMG") enhanceStill(media, a);
           return;
         }
         const still = document.createElement("img");
@@ -309,6 +451,7 @@ const applyPreviewConvention = async () => {
         still.src = lastFrame;
         thumb.textContent = "";
         thumb.appendChild(still);
+        enhanceStill(still, a);
         if (hoverPlayable) {
           let live = null;
           a.addEventListener("pointerenter", () => {
@@ -469,7 +612,12 @@ const applyPreviewConvention = async () => {
             if (media) {
               frame.style.background = "#000";
               frame.appendChild(media);
-              gateMediaToMiddleBand(media);
+              gateMediaToActiveAttr(media, li);
+              // Ken Burns only on truly static images. Animated rasters
+              // (gif / animated webp / apng) own their visible motion and
+              // mustn't get the drift overlaid on top.
+              const isAnimImg = /\.(gif|apng|webp)(\?|#|$)/i.test(thumbUrl);
+              if (media.tagName === "IMG" && !isAnimImg) enhanceStill(media, li);
             }
           }
         }
@@ -569,6 +717,7 @@ const _buildTouchPreview = (targets) => {
   const videoEl = preview.querySelector(".preview-video");
   const imgEl = preview.querySelector(".preview-img");
   const lottieEl = preview.querySelector(".preview-lottie");
+  enableKenBurns(imgEl);
 
   const VIDEO_RE = /\.(mp4|webm|mov|ogg|ogv)(\?|#|$)/i;
   const LOTTIE_RE = /\.(json|lottie)(\?|#|$)/i;
@@ -697,6 +846,7 @@ const _buildPreview = () => {
   const videoEl = preview.querySelector(".preview-video");
   const imgEl = preview.querySelector(".preview-img");
   const lottieEl = preview.querySelector(".preview-lottie");
+  enableKenBurns(imgEl);
 
   const OFFSET_X = 28, OFFSET_Y = -90;
   const STIFFNESS = 120, DAMPING = 14, MASS = 1;
@@ -721,8 +871,10 @@ const _buildPreview = () => {
   let tx = 0, ty = 0, targetX = 0, targetY = 0;
   let vx = 0, vy = 0, lastT = performance.now();
   let active = null;
+  let rafId = null;
   if (!anchored) { tx = ty = targetX = targetY = -9999; }
 
+  const SETTLE_EPS = 0.05;
   const tick = (t) => {
     const dt = Math.min((t - lastT) / 1000, 1 / 30);
     lastT = t;
@@ -737,15 +889,26 @@ const _buildPreview = () => {
     } else {
       preview.style.transform = `translate3d(${tx}px, ${ty}px, 0) scale(${active ? 1 : 0.92})`;
     }
-    requestAnimationFrame(tick);
+    // Sleep once the spring is settled. wake() relaunches on the next interaction.
+    const settled =
+      Math.abs(tx - targetX) < SETTLE_EPS && Math.abs(ty - targetY) < SETTLE_EPS &&
+      Math.abs(vx) < SETTLE_EPS && Math.abs(vy) < SETTLE_EPS;
+    if (settled && !active) { rafId = null; return; }
+    rafId = requestAnimationFrame(tick);
   };
-  requestAnimationFrame(tick);
+  const wake = () => {
+    if (rafId) return;
+    lastT = performance.now();
+    rafId = requestAnimationFrame(tick);
+  };
+  wake();
 
   if (!anchored) {
     document.addEventListener("pointermove", (e) => {
       targetX = e.clientX + OFFSET_X;
       targetY = e.clientY + OFFSET_Y;
-    });
+      wake();
+    }, { passive: true });
   }
 
   const clearMedia = () => {
@@ -779,6 +942,7 @@ const _buildPreview = () => {
         targetY = e.clientY + OFFSET_Y;
         if (firstEntry) { tx = targetX; ty = targetY; vx = 0; vy = 0; }
       }
+      wake();
 
       clearMedia();
       const src = el.dataset.previewSrc;
@@ -830,6 +994,7 @@ const _buildPreview = () => {
       active = null;
       preview.classList.remove("show");
       clearMedia();
+      wake();
     });
   });
 };
@@ -871,6 +1036,7 @@ const initCraftThumbs = () => {
         media.alt = "";
         media.className = "thumb-media";
         thumb.appendChild(media);
+        enhanceStill(media, a);
       }
       // Lottie skipped in thumbs — too heavy at this size.
     });
@@ -1017,6 +1183,15 @@ const initCaseStudy = () => {
   const VIDEO_RE = /\.(mp4|webm|mov|ogg|ogv)(\?|#|$)/i;
   const LOTTIE_RE = /\.(json|lottie)(\?|#|$)/i;
 
+  // Animated raster formats own their own playback like video/Lottie. We
+  // tag them with a distinct type so they don't get Ken Burns (would steal
+  // the visible motion) and don't get .settled (releasing the GPU layer
+  // freezes frame decoding in Chrome/Safari).
+  // webp is included because case-study stages use animated webp; static
+  // webps would also fall here but pay nothing extra — Ken Burns on a
+  // single-frame webp is just a no-op visually.
+  const ANIM_IMG_RE = /\.(gif|apng|webp)(\?|#|$)/i;
+
   const fmt = (n) => String(n).padStart(2, "0");
 
   let activeIdx = -1;
@@ -1048,12 +1223,13 @@ const initCaseStudy = () => {
     img.alt = "";
     img.decoding = "async";
     img.src = src;
-    return { el: img, type: "image", src };
+    const type = ANIM_IMG_RE.test(src) ? "anim-image" : "image";
+    return { el: img, type, src };
   };
 
   const whenReady = (layer) => new Promise((resolve) => {
     if (!layer) return resolve();
-    if (layer.type === "image") {
+    if (layer.type === "image" || layer.type === "anim-image") {
       const img = layer.el;
       const done = () => resolve();
       if (img.decode) img.decode().then(done, done);
@@ -1154,13 +1330,40 @@ const initCaseStudy = () => {
       const outgoing = currentLayer;
       if (nextLayer?.el) nextLayer.el.classList.add("active");
       currentLayer = nextLayer;
+      // Hand transform control to .kb (Ken Burns + cursor parallax) once the
+      // entry transition settles. Images only — videos and Lottie animate
+      // themselves. Length matches the longest entry transition (1.1s).
+      if (nextLayer?.type === "image") {
+        const layer = nextLayer;
+        // Matches the unified 0.8s entry transition + a tiny settle buffer.
+        layer._kbTimer = setTimeout(() => {
+          if (currentLayer === layer && layer.el?.isConnected) {
+            enhanceStill(layer.el, stage);
+          }
+        }, 850);
+        // After the entry transition completes, mark the image .settled so
+        // CSS can drop `will-change` / `filter` / `transform`. A permanent
+        // compositing layer stalls GIF frame decoding in Chrome/Safari.
+        // Restricted to images : video and Lottie manage their own playback
+        // and must keep their compositing surface intact — releasing it on
+        // them causes the animation to be treated as a static frame.
+        layer._settleTimer = setTimeout(() => {
+          if (currentLayer === layer && layer.el?.isConnected) {
+            layer.el.classList.add("settled");
+          }
+        }, 820);
+      }
       if (outgoing?.el) {
+        if (outgoing._kbTimer) { clearTimeout(outgoing._kbTimer); outgoing._kbTimer = null; }
+        if (outgoing._settleTimer) { clearTimeout(outgoing._settleTimer); outgoing._settleTimer = null; }
+        outgoing.el.classList.remove("kb"); // let .leaving own the transform
+        outgoing.el.classList.remove("settled");
         outgoing.el.classList.remove("active");
         outgoing.el.classList.add("leaving");
         const cleanup = () => destroyLayer(outgoing);
         outgoing.el.addEventListener("transitionend", cleanup, { once: true });
         // Fallback in case transitionend never fires (tab hidden, prefers-reduced-motion edge cases).
-        setTimeout(cleanup, 1200);
+        setTimeout(cleanup, 900);
       }
     }));
   };
@@ -1168,13 +1371,21 @@ const initCaseStudy = () => {
   // Pick the active thumb. Vertical (desktop) : closest to viewport center.
   // Horizontal (tablet rail) : closest to the start snap-point (matches scroll-snap-align: start).
   const rail = thumbs[0].parentElement;
+  // Cache layout-mode hints. Refreshed on resize (rail flex-direction is
+  // driven by media query, padding rarely changes). Avoids two
+  // getComputedStyle() calls per scroll frame.
+  let railHorizontal = false;
+  let railPadLeft = 0;
+  const refreshRailLayout = () => {
+    const cs = getComputedStyle(rail);
+    railHorizontal = cs.flexDirection === "row";
+    railPadLeft = parseFloat(cs.scrollPaddingInlineStart) || 0;
+  };
+  refreshRailLayout();
   const computeActive = () => {
-    const horizontal = getComputedStyle(rail).flexDirection === "row";
     let bestIdx = 0, bestDist = Infinity;
-    if (horizontal) {
-      const railRect = rail.getBoundingClientRect();
-      const padLeft = parseFloat(getComputedStyle(rail).scrollPaddingInlineStart) || 0;
-      const target = railRect.left + padLeft;
+    if (railHorizontal) {
+      const target = rail.getBoundingClientRect().left + railPadLeft;
       thumbs.forEach((li, i) => {
         const r = li.getBoundingClientRect();
         const d = Math.abs(r.left - target);
@@ -1195,16 +1406,28 @@ const initCaseStudy = () => {
   swap(0);
   computeActive();
 
+  // Throttle: rAF alone fires at 60Hz, and each call reads N boundingClientRect
+  // for N thumbs. Capping at ~33ms (≈30Hz) halves the layout cost during fast
+  // scroll without any perceptible lag in the active-thumb swap.
   let rafId = null;
+  let lastTs = 0;
+  const THROTTLE_MS = 33;
   const onScroll = () => {
     if (rafId) return;
-    rafId = requestAnimationFrame(() => {
+    rafId = requestAnimationFrame((ts) => {
       rafId = null;
+      if (ts - lastTs < THROTTLE_MS) {
+        // Re-arm for next frame so we don't miss the final position when scroll stops.
+        rafId = requestAnimationFrame(() => { rafId = null; lastTs = performance.now(); computeActive(); });
+        return;
+      }
+      lastTs = ts;
       computeActive();
     });
   };
+  const onResize = () => { refreshRailLayout(); onScroll(); };
   window.addEventListener("scroll", onScroll, { passive: true });
-  window.addEventListener("resize", onScroll, { passive: true });
+  window.addEventListener("resize", onResize, { passive: true });
   rail.addEventListener("scroll", onScroll, { passive: true });
 };
 

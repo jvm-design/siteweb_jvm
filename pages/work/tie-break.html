@@ -66,13 +66,20 @@
   </script>
 
   <link rel="stylesheet" href="../../assets/css/reset.css" />
-  <link rel="stylesheet" href="../../assets/css/styles.css?v=48" />
+  <link rel="stylesheet" href="../../assets/css/styles.css?v=50" />
   <style>
-    /* Tie Break — GIFs en 16:9 natif, frames adaptés pour fill sans bandes noires */
+    /* Tie Break — captures en 16:9 natif, frames adaptés pour fill sans bandes noires */
     .case-thumbs > li .thumb-frame { aspect-ratio: 16 / 9; }
     .case-stage .stage-frame { aspect-ratio: 16 / 9; }
     .thumb-frame { background-size: cover !important; background-position: center !important; }
     .stage-media { object-fit: cover; object-position: center; }
+    /* Tablet : la stage-frame est forcée à hauteur de colonne (portrait
+       étroit), ce qui rognerait la vidéo 16:9 en object-fit: cover. On
+       laisse la frame fill la colonne et on bascule le media en contain
+       pour garder l'animation entièrement visible — letterbox assumé. */
+    @media (min-width: 768px) and (max-width: 1080px) {
+      .case-stage .stage-media { object-fit: contain; background: #000; }
+    }
   </style>
 </head>
 <body class="case-study" data-slug="tie-break">
@@ -201,6 +208,6 @@
     </div>
   </article>
 
-  <script src="../../assets/js/main.js?v=32"></script>
+  <script src="../../assets/js/main.js?v=37"></script>
 </body>
 </html>
