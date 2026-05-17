@@ -19,12 +19,6 @@ const PREVIEWS_BASE = (() => {
   return "/assets/previews/";
 })();
 
-const LOTTIE_URL = (() => {
-  const s = document.currentScript || document.querySelector('script[src*="main.js"]');
-  if (s) return new URL("./lottie_light.min.js", s.src).href;
-  return "/assets/js/lottie_light.min.js";
-})();
-
 const resolvePreviewUrl = async (slug, role) => {
   if (!slug || !role) return null;
   const cacheKey = `pv:${slug}/${role}`;
@@ -90,7 +84,7 @@ const loadLottieLib = () => {
   if (_lottieLibPromise) return _lottieLibPromise;
   _lottieLibPromise = new Promise((resolve, reject) => {
     const s = document.createElement("script");
-    s.src = LOTTIE_URL;
+    s.src = "https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie_light.min.js";
     s.onload = () => resolve(window.lottie);
     s.onerror = reject;
     document.head.appendChild(s);
@@ -325,18 +319,25 @@ const makePreviewMedia = (url, className) => {
   return img;
 };
 
-/* Idle motion on still photos — Newson grammar.
-   Honest motion : photo is silent at rest, leans away from the cursor
-   on engagement. Pointer position on the host updates --px-x / --px-y
-   via inline style ; CSS .parallax class consumes them in its transform.
-   On touch (no hover), the same class is driven by a CSS scroll-timeline
-   instead — scroll IS the interaction. Both paths converge on the same
-   transform, so the visual vocabulary is identical across devices.
-   One rAF loop per host, lerped, sleeps when settled. */
+/* Idle motion on still photos — Ive/Newson grammar.
+   • Ken Burns : CSS @keyframes drives --kb-t (0..1..0 over 16s) which
+     interpolates a micro drift + scale in the transform. Random phase per
+     element so a row of tiles never beats in unison.
+   • Parallax : pointer position on the host updates --px-x / --px-y,
+     composed into the same transform so the two effects add. One rAF
+     loop per host, lerped, sleeps when settled. Mouse/pen only — touch
+     would just stick the photo to the finger. */
+const enableKenBurns = (img) => {
+  if (!img || reducedMotion) return;
+  if (img.classList.contains("kb")) return;
+  img.style.animationDelay = `${-Math.random() * 16}s`;
+  img.classList.add("kb");
+};
+
 const enableHoverParallax = (img, host, opts = {}) => {
   if (!img || !host || !canHover || reducedMotion) return;
-  if (host._parallax) {
-    host._parallax.img = img;
+  if (host._kbParallax) {
+    host._kbParallax.img = img;
     return;
   }
   const state = {
@@ -347,7 +348,7 @@ const enableHoverParallax = (img, host, opts = {}) => {
     tx: 0, ty: 0, cx: 0, cy: 0, rafId: null,
     rect: null,
   };
-  host._parallax = state;
+  host._kbParallax = state;
   const write = () => {
     const t = state.img;
     if (!t) return;
@@ -398,11 +399,7 @@ const enableHoverParallax = (img, host, opts = {}) => {
 };
 
 const enhanceStill = (img, host, opts) => {
-  if (!img || reducedMotion) return;
-  // Class is added unconditionally so the CSS scroll-driven path can also
-  // own this element on touch devices (no-hover). Hover devices then layer
-  // pointer-driven parallax on top via inline style.
-  if (!img.classList.contains("parallax")) img.classList.add("parallax");
+  enableKenBurns(img);
   if (host) enableHoverParallax(img, host, opts);
 };
 
@@ -616,8 +613,9 @@ const applyPreviewConvention = async () => {
               frame.style.background = "#000";
               frame.appendChild(media);
               gateMediaToActiveAttr(media, li);
-              // Hover parallax only on truly static images. Animated rasters
-              // (gif / animated webp / apng) own their visible motion.
+              // Ken Burns only on truly static images. Animated rasters
+              // (gif / animated webp / apng) own their visible motion and
+              // mustn't get the drift overlaid on top.
               const isAnimImg = /\.(gif|apng|webp)(\?|#|$)/i.test(thumbUrl);
               if (media.tagName === "IMG" && !isAnimImg) enhanceStill(media, li);
             }
@@ -719,6 +717,7 @@ const _buildTouchPreview = (targets) => {
   const videoEl = preview.querySelector(".preview-video");
   const imgEl = preview.querySelector(".preview-img");
   const lottieEl = preview.querySelector(".preview-lottie");
+  enableKenBurns(imgEl);
 
   const VIDEO_RE = /\.(mp4|webm|mov|ogg|ogv)(\?|#|$)/i;
   const LOTTIE_RE = /\.(json|lottie)(\?|#|$)/i;
@@ -847,6 +846,7 @@ const _buildPreview = () => {
   const videoEl = preview.querySelector(".preview-video");
   const imgEl = preview.querySelector(".preview-img");
   const lottieEl = preview.querySelector(".preview-lottie");
+  enableKenBurns(imgEl);
 
   const OFFSET_X = 28, OFFSET_Y = -90;
   const STIFFNESS = 120, DAMPING = 14, MASS = 1;
@@ -859,7 +859,7 @@ const _buildPreview = () => {
     if (lottiePromise) return lottiePromise;
     lottiePromise = new Promise((resolve, reject) => {
       const s = document.createElement("script");
-      s.src = LOTTIE_URL;
+      s.src = "https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie_light.min.js";
       s.onload = () => resolve(window.lottie);
       s.onerror = reject;
       document.head.appendChild(s);
@@ -1184,9 +1184,12 @@ const initCaseStudy = () => {
   const LOTTIE_RE = /\.(json|lottie)(\?|#|$)/i;
 
   // Animated raster formats own their own playback like video/Lottie. We
-  // tag them with a distinct type so they don't get .settled (releasing the
-  // GPU layer freezes frame decoding in Chrome/Safari). They also skip the
-  // parallax class — they're never truly still.
+  // tag them with a distinct type so they don't get Ken Burns (would steal
+  // the visible motion) and don't get .settled (releasing the GPU layer
+  // freezes frame decoding in Chrome/Safari).
+  // webp is included because case-study stages use animated webp; static
+  // webps would also fall here but pay nothing extra — Ken Burns on a
+  // single-frame webp is just a no-op visually.
   const ANIM_IMG_RE = /\.(gif|apng|webp)(\?|#|$)/i;
 
   const fmt = (n) => String(n).padStart(2, "0");
@@ -1327,11 +1330,13 @@ const initCaseStudy = () => {
       const outgoing = currentLayer;
       if (nextLayer?.el) nextLayer.el.classList.add("active");
       currentLayer = nextLayer;
-      // Hand transform control to .parallax (cursor lean) once the entry
-      // transition settles. Images only — videos and Lottie animate themselves.
+      // Hand transform control to .kb (Ken Burns + cursor parallax) once the
+      // entry transition settles. Images only — videos and Lottie animate
+      // themselves. Length matches the longest entry transition (1.1s).
       if (nextLayer?.type === "image") {
         const layer = nextLayer;
-        layer._parallaxTimer = setTimeout(() => {
+        // Matches the unified 0.8s entry transition + a tiny settle buffer.
+        layer._kbTimer = setTimeout(() => {
           if (currentLayer === layer && layer.el?.isConnected) {
             enhanceStill(layer.el, stage);
           }
@@ -1349,9 +1354,9 @@ const initCaseStudy = () => {
         }, 820);
       }
       if (outgoing?.el) {
-        if (outgoing._parallaxTimer) { clearTimeout(outgoing._parallaxTimer); outgoing._parallaxTimer = null; }
+        if (outgoing._kbTimer) { clearTimeout(outgoing._kbTimer); outgoing._kbTimer = null; }
         if (outgoing._settleTimer) { clearTimeout(outgoing._settleTimer); outgoing._settleTimer = null; }
-        outgoing.el.classList.remove("parallax"); // let .leaving own the transform
+        outgoing.el.classList.remove("kb"); // let .leaving own the transform
         outgoing.el.classList.remove("settled");
         outgoing.el.classList.remove("active");
         outgoing.el.classList.add("leaving");

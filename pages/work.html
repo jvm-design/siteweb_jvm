@@ -70,21 +70,7 @@
   </script>
 
   <link rel="stylesheet" href="../assets/css/reset.css" />
-  <link rel="stylesheet" href="../assets/css/styles.css?v=63" />
-  <script>
-    /* Page-load motion gate : pose .ready sur <html> AVANT first-paint, ce qui
-       déclenche le fade-in .enter (cf. CSS html.ready .enter > * { animation: enter both }).
-       Sans cette classe, contenu visible immédiatement = fallback no-JS propre.
-       Sur bfcache restore (back/forward), on retire .ready, force un reflow, puis
-       on la repose — l'animation rejoue, symétrie click-avant / browser-back. */
-    document.documentElement.classList.add('ready');
-    window.addEventListener('pageshow', function (e) {
-      if (!e.persisted) return;
-      document.documentElement.classList.remove('ready');
-      void document.documentElement.offsetHeight;
-      document.documentElement.classList.add('ready');
-    });
-  </script>
+  <link rel="stylesheet" href="../assets/css/styles.css?v=50" />
 </head>
 <body>
   <a class="skip-link" href="#main">Aller au contenu</a>
@@ -92,7 +78,7 @@
     <div class="page-with-preview">
     <div class="col enter">
       <div class="header-row">
-        <a class="brand" href="https://www.linkedin.com/in/jaimevillegasmaira/" target="_blank" rel="noopener" aria-label="Mon profil LinkedIn (nouvel onglet)">
+        <a class="brand" href="../index.html" aria-label="Accueil">
           <img src="../assets/img/avatar.jpg" alt="Jaime Villegas Maira" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'JVM'}))" />
         </a>
         <div class="intro">
@@ -327,6 +313,6 @@
     </div>
   </div>
 
-  <script src="../assets/js/main.js?v=44"></script>
+  <script src="../assets/js/main.js?v=37"></script>
 </body>
 </html>
