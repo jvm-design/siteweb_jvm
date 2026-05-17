@@ -71,8 +71,14 @@ body { line-height: var(--lh-base); }
 .header-row h1,
 .page-title { view-transition-name: page-title; }
 
+/* Root group snaps : on n'anime QUE les éléments nommés (coquille).
+   .enter prend le relais sur le contenu du <main> — pas de superposition
+   crossfade-root × rise. */
 ::view-transition-old(root),
-::view-transition-new(root),
+::view-transition-new(root) {
+  animation: none;
+}
+
 ::view-transition-old(brand-avatar),
 ::view-transition-new(brand-avatar),
 ::view-transition-old(primary-nav),
@@ -1693,9 +1699,15 @@ button.case-cta {
 .footer-links a:last-child:hover { opacity: 0.8; color: var(--accent); }
 
 
-/* ——— Entrance animation (stagger) ——— */
+/* ——— Entrance animation (stagger) — Ive focus pull.
+   Content is always visible : it just starts slightly out of focus and
+   offset, then resolves in. No opacity transition means the View
+   Transition snapshot of the new doc captures content at "blurred but
+   visible", so the cross-fade between pages never reveals an empty
+   frame. Equally clean on first load and on VT navigation.
+   Removing opacity also avoids the "page appears empty for ~0.6s"
+   glitch on browsers that don't run cross-doc VT at all. */
 .enter > * {
-  opacity: 0;
   filter: blur(8px);
   transform: translateY(16px);
   animation: enter var(--motion-rise) var(--ease-out) forwards;
@@ -1708,7 +1720,6 @@ button.case-cta {
 .enter > *:nth-child(6) { animation-delay: calc(var(--stagger-step) * 6); }
 
 .enter .list > .list-item {
-  opacity: 0;
   filter: blur(6px);
   transform: translateY(16px);
   animation: enter 0.5s var(--ease-out) forwards;
@@ -1722,7 +1733,6 @@ button.case-cta {
 
 @keyframes enter {
   to {
-    opacity: 1;
     filter: blur(0);
     transform: translateY(0);
   }
@@ -1744,8 +1754,11 @@ button.case-cta {
   transform: none;
   animation: none;
 }
-.enter .header-row .intro {
-  opacity: 0;
+/* L'H1 (.page-title / .header-row h1) porte view-transition-name : il
+   morph entre pages, donc on ne le rise pas — sinon la VT capturerait
+   le titre en blur+offset et morpherait vers cet état avant que .enter
+   ne le rétablisse. Seul le rôle (Home) rise. */
+.enter .header-row .intro > .intro-role {
   filter: blur(8px);
   transform: translateY(16px);
   animation: enter var(--motion-rise) var(--ease-out) var(--stagger-step) forwards;
@@ -1757,7 +1770,6 @@ button.case-cta {
 .case-study .case-meta,
 .case-study .case-thumbs,
 .case-study .case-stage {
-  opacity: 0;
   filter: blur(8px);
   transform: translateY(16px);
   animation: enter var(--motion-rise) var(--ease-out) forwards;
@@ -1771,6 +1783,7 @@ button.case-cta {
   .enter > *,
   .enter .list > .list-item,
   .enter .header-row .brand,
+  .enter .header-row .intro > .intro-role,
   .case-study .case-bar,
   .case-study .case-meta,
   .case-study .case-thumbs,
