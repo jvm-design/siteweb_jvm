@@ -21,6 +21,12 @@
   --ease: cubic-bezier(0.4, 0, 0.2, 1);
   --ease-out: cubic-bezier(0, 0, 0.2, 1);
 
+  /* Motion tokens — single source of truth for the system. */
+  --motion-page: 0.35s;
+  --motion-rise: 0.55s;
+  --motion-fade: 0.22s;
+  --stagger-step: 0.06s;
+
   --col: 42rem;
   --pad-x: 2rem;
   --pad-y: 6rem;
@@ -62,25 +68,20 @@ body { line-height: var(--lh-base); }
 .brand { view-transition-name: brand-avatar; }
 .site-nav { view-transition-name: primary-nav; }
 .site-footer { view-transition-name: site-footer; }
+.header-row h1,
+.page-title { view-transition-name: page-title; }
 
 ::view-transition-old(root),
-::view-transition-new(root) {
-  animation-duration: 0.4s;
-  animation-timing-function: var(--ease);
-}
+::view-transition-new(root),
 ::view-transition-old(brand-avatar),
 ::view-transition-new(brand-avatar),
 ::view-transition-old(primary-nav),
-::view-transition-new(primary-nav) {
-  animation-duration: 0.5s;
-  animation-timing-function: var(--ease);
-}
-/* Footer morphs between layouts — main pages (centered --col, blurred)
-   and case-study (full-width 12-col rail, transparent). Slightly slower
-   to weight the geometric change. */
+::view-transition-new(primary-nav),
+::view-transition-old(page-title),
+::view-transition-new(page-title),
 ::view-transition-old(site-footer),
 ::view-transition-new(site-footer) {
-  animation-duration: 0.55s;
+  animation-duration: var(--motion-page);
   animation-timing-function: var(--ease);
 }
 
@@ -91,6 +92,8 @@ body { line-height: var(--lh-base); }
   ::view-transition-new(brand-avatar),
   ::view-transition-old(primary-nav),
   ::view-transition-new(primary-nav),
+  ::view-transition-old(page-title),
+  ::view-transition-new(page-title),
   ::view-transition-old(site-footer),
   ::view-transition-new(site-footer) {
     animation: none !important;
@@ -1382,40 +1385,48 @@ button.case-cta {
   .case-detail__close { display: block; padding: calc(var(--unit) * 3) calc(var(--unit) * 6); }
 }
 
-/* ——— Idle motion on still photos — Ive / Newson grammar.
-   Ive : time as a material. A 16s sine wave drives --kb-t (0..1..0) which
-   feeds a micro drift + scale, slow enough to read as "alive" rather than
-   "animated". Same heartbeat as the video tiles, no extra noise.
-   Newson : on hover the cursor sets --px-x / --px-y, a window-pane tilt
-   opposite the pointer. Composed into one transform so the two effects
-   add cleanly. Whole budget kept inside the safe slack of scale() so the
-   photo never reveals its edge. */
-@property --kb-t {
-  syntax: "<number>";
+/* ——— Idle motion on still photos — Newson grammar.
+   Honest motion : silent at rest, alive on interaction.
+   • Hover devices : pointer sets --px-x / --px-y via JS, a window-pane
+     tilt opposite the cursor.
+   • Touch devices : scroll IS the interaction. CSS scroll-driven animation
+     lerps --px-y as the image crosses the viewport (+4px entering →
+     -4px exiting), so the photo leans gently with the user's scroll.
+   Scale(1.04) gives the image presence in its frame and absorbs the
+   parallax travel so the edge never reveals. */
+@property --px-x {
+  syntax: "<length>";
   inherits: false;
-  initial-value: 0;
+  initial-value: 0px;
 }
-@keyframes kb-drift {
-  0%, 100% { --kb-t: 0; }
-  50%      { --kb-t: 1; }
+@property --px-y {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
 }
-.kb {
-  --kb-t: 0;
-  --px-x: 0px;
-  --px-y: 0px;
-  animation: kb-drift 16s ease-in-out infinite;
-  transform:
-    translate(
-      calc((var(--kb-t) - 0.5) * 1%   + var(--px-x)),
-      calc((var(--kb-t) - 0.5) * -0.8% + var(--px-y))
-    )
-    scale(calc(1.06 + (var(--kb-t) - 0.5) * 0.02));
+.parallax {
+  transform: translate(var(--px-x), var(--px-y)) scale(1.04);
   transform-origin: 50% 50%;
   will-change: transform;
 }
-/* Stage media owns its own opacity transition; .kb takes over transform
+/* Touch / no-hover devices : the image leans with the scroll. CSS-only,
+   driven by the element's view progress — zero JS, perfect 60fps. */
+@supports (animation-timeline: view()) {
+  @media (hover: none) and (prefers-reduced-motion: no-preference) {
+    .parallax {
+      animation: parallax-scroll linear both;
+      animation-timeline: view();
+      animation-range: cover 0% cover 100%;
+    }
+    @keyframes parallax-scroll {
+      from { --px-y: 4px; }
+      to   { --px-y: -4px; }
+    }
+  }
+}
+/* Stage media owns its own opacity transition; .parallax takes over transform
    only after the entry transition has settled (JS sets the class then). */
-.stage-media.kb {
+.stage-media.parallax {
   transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -1435,8 +1446,7 @@ button.case-cta {
     filter: none !important;
     transform: none !important;
   }
-  .kb {
-    animation: none !important;
+  .parallax {
     transform: none !important;
   }
 }
@@ -1688,27 +1698,27 @@ button.case-cta {
   opacity: 0;
   filter: blur(8px);
   transform: translateY(16px);
-  animation: enter 0.7s var(--ease-out) forwards;
+  animation: enter var(--motion-rise) var(--ease-out) forwards;
 }
-.enter > *:nth-child(1) { animation-delay: 0.05s; }
-.enter > *:nth-child(2) { animation-delay: 0.15s; }
-.enter > *:nth-child(3) { animation-delay: 0.25s; }
-.enter > *:nth-child(4) { animation-delay: 0.35s; }
-.enter > *:nth-child(5) { animation-delay: 0.45s; }
-.enter > *:nth-child(6) { animation-delay: 0.55s; }
+.enter > *:nth-child(1) { animation-delay: calc(var(--stagger-step) * 1); }
+.enter > *:nth-child(2) { animation-delay: calc(var(--stagger-step) * 2); }
+.enter > *:nth-child(3) { animation-delay: calc(var(--stagger-step) * 3); }
+.enter > *:nth-child(4) { animation-delay: calc(var(--stagger-step) * 4); }
+.enter > *:nth-child(5) { animation-delay: calc(var(--stagger-step) * 5); }
+.enter > *:nth-child(6) { animation-delay: calc(var(--stagger-step) * 6); }
 
 .enter .list > .list-item {
   opacity: 0;
   filter: blur(6px);
   transform: translateY(16px);
-  animation: enter 0.6s var(--ease-out) forwards;
+  animation: enter 0.5s var(--ease-out) forwards;
 }
-.enter .list > .list-item:nth-of-type(1) { animation-delay: 0.45s; }
-.enter .list > .list-item:nth-of-type(2) { animation-delay: 0.55s; }
-.enter .list > .list-item:nth-of-type(3) { animation-delay: 0.65s; }
-.enter .list > .list-item:nth-of-type(4) { animation-delay: 0.75s; }
-.enter .list > .list-item:nth-of-type(5) { animation-delay: 0.85s; }
-.enter .list > .list-item:nth-of-type(6) { animation-delay: 0.95s; }
+.enter .list > .list-item:nth-of-type(1) { animation-delay: calc(var(--stagger-step) * 5); }
+.enter .list > .list-item:nth-of-type(2) { animation-delay: calc(var(--stagger-step) * 6); }
+.enter .list > .list-item:nth-of-type(3) { animation-delay: calc(var(--stagger-step) * 7); }
+.enter .list > .list-item:nth-of-type(4) { animation-delay: calc(var(--stagger-step) * 8); }
+.enter .list > .list-item:nth-of-type(5) { animation-delay: calc(var(--stagger-step) * 9); }
+.enter .list > .list-item:nth-of-type(6) { animation-delay: calc(var(--stagger-step) * 10); }
 
 @keyframes enter {
   to {
@@ -1718,15 +1728,27 @@ button.case-cta {
   }
 }
 
-/* L'avatar reste visuellement fixe pendant l'entrée :
-   on contre la translation du parent .header-row pour annuler le mouvement
-   vertical, tout en laissant l'opacité et le flou hérités s'appliquer. */
-.enter .header-row .brand {
-  transform: translateY(-16px);
-  animation: brand-hold 0.7s var(--ease-out) 0.05s forwards;
+/* Cross-document View Transitions portent le mouvement des éléments
+   d'identité (brand + site-nav). On supprime le stagger .enter sur eux :
+   le snapshot capturé par la VT les voit à leur état visible final, donc
+   le morph entre pages se fait proprement — pas de double-mouvement.
+   Le stagger continue sur l'intro (titre + rôle) via une règle dédiée. */
+.enter > .header-row,
+.enter > .site-nav {
+  opacity: 1;
+  filter: none;
+  transform: none;
+  animation: none;
 }
-@keyframes brand-hold {
-  to { transform: translateY(0); }
+.enter .header-row .brand {
+  transform: none;
+  animation: none;
+}
+.enter .header-row .intro {
+  opacity: 0;
+  filter: blur(8px);
+  transform: translateY(16px);
+  animation: enter var(--motion-rise) var(--ease-out) var(--stagger-step) forwards;
 }
 
 /* Case-study : même langage d'entrée que le reste du site (stagger blur+rise),
@@ -1738,12 +1760,12 @@ button.case-cta {
   opacity: 0;
   filter: blur(8px);
   transform: translateY(16px);
-  animation: enter 0.7s var(--ease-out) forwards;
+  animation: enter var(--motion-rise) var(--ease-out) forwards;
 }
-.case-study .case-bar    { animation-delay: 0.05s; }
-.case-study .case-meta   { animation-delay: 0.20s; }
-.case-study .case-thumbs { animation-delay: 0.30s; }
-.case-study .case-stage  { animation-delay: 0.35s; }
+.case-study .case-bar    { animation-delay: calc(var(--stagger-step) * 1); }
+.case-study .case-meta   { animation-delay: calc(var(--stagger-step) * 3); }
+.case-study .case-thumbs { animation-delay: calc(var(--stagger-step) * 4); }
+.case-study .case-stage  { animation-delay: calc(var(--stagger-step) * 5); }
 
 @media (prefers-reduced-motion: reduce) {
   .enter > *,
