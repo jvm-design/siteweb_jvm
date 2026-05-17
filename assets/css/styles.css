@@ -31,7 +31,6 @@
   --motion-rise: 0.42s;
   --motion-fade: 0.28s;
   --stagger-step: 0.035s;
-  --rise-y: 8px;
 
   --col: 42rem;
   --pad-x: 2rem;
@@ -1661,18 +1660,29 @@ button.case-cta {
 .footer-links a:last-child:hover { opacity: 0.8; color: var(--accent); }
 
 
-/* ——— Entrance animation (stagger) — Ive focus pull.
-   Content is always visible : it just starts slightly out of focus and
-   offset, then resolves in. No opacity transition means the View
-   Transition snapshot of the new doc captures content at "blurred but
-   visible", so the cross-fade between pages never reveals an empty
-   frame. Equally clean on first load and on VT navigation.
-   Removing opacity also avoids the "page appears empty for ~0.6s"
-   glitch on browsers that don't run cross-doc VT at all. */
-.enter > * {
-  filter: blur(3px);
-  transform: translateY(var(--rise-y));
-  animation: enter var(--motion-rise) var(--ease-emphasis) forwards;
+/* ——— Entrance animation — opacity-only fade ———
+   On anime UNIQUEMENT opacity. Plus de blur (GPU-variable selon driver),
+   plus de translateY (compose avec sticky/scroll-driven sur mobile). Pur
+   opacity = compositor 100% accéléré, identique sur tous les navigateurs.
+
+   Le rule est gatée par html.ready (posé par un inline script en <head>
+   avant first-paint) : sans JS, contenu visible (fallback no-JS) ; avec
+   JS, le fade-in joue dès que la classe arrive. Le fill-mode `both` fait
+   tenir l'état initial (opacity 0) pendant la phase de delay, donc pas
+   de flash de "contenu visible puis qui disparaît".
+
+   Le pageshow handler (script inline) re-pose .ready au retour bfcache
+   pour symétriser l'expérience back/forward avec la nav avant. */
+.enter > * { opacity: 1; }
+/* Longhand pour ne pas écraser animation-delay des règles nth-child
+   (le shorthand `animation: enter ... both` resetterait delay à 0,
+   et html.ready ajoute de la spécificité qui bat la cascade). */
+html.ready .enter > *:not(.header-row):not(.site-nav) {
+  animation-name: enter;
+  animation-duration: var(--motion-rise);
+  animation-timing-function: var(--ease-emphasis);
+  animation-fill-mode: both;
+  will-change: opacity;
 }
 .enter > *:nth-child(1) { animation-delay: calc(var(--stagger-step) * 1); }
 .enter > *:nth-child(2) { animation-delay: calc(var(--stagger-step) * 2); }
@@ -1681,10 +1691,13 @@ button.case-cta {
 .enter > *:nth-child(5) { animation-delay: calc(var(--stagger-step) * 5); }
 .enter > *:nth-child(6) { animation-delay: calc(var(--stagger-step) * 6); }
 
-.enter .list > .list-item {
-  filter: blur(2px);
-  transform: translateY(var(--rise-y));
-  animation: enter var(--motion-rise) var(--ease-emphasis) forwards;
+.enter .list > .list-item { opacity: 1; }
+html.ready .enter .list > .list-item {
+  animation-name: enter;
+  animation-duration: var(--motion-rise);
+  animation-timing-function: var(--ease-emphasis);
+  animation-fill-mode: both;
+  will-change: opacity;
 }
 .enter .list > .list-item:nth-of-type(1) { animation-delay: calc(var(--stagger-step) * 5); }
 .enter .list > .list-item:nth-of-type(2) { animation-delay: calc(var(--stagger-step) * 6); }
@@ -1694,44 +1707,42 @@ button.case-cta {
 .enter .list > .list-item:nth-of-type(6) { animation-delay: calc(var(--stagger-step) * 10); }
 
 @keyframes enter {
-  to {
-    filter: blur(0);
-    transform: translateY(0);
-  }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
-/* Cross-document View Transitions portent le mouvement des éléments
-   d'identité (brand + site-nav). On supprime le stagger .enter sur eux :
-   le snapshot capturé par la VT les voit à leur état visible final, donc
-   le morph entre pages se fait proprement — pas de double-mouvement.
-   Le stagger continue sur l'intro (titre + rôle) via une règle dédiée. */
+/* Coquille toujours visible immédiatement — pas de fade sur l'identité. */
 .enter > .header-row,
 .enter > .site-nav {
   opacity: 1;
-  filter: none;
-  transform: none;
   animation: none;
-}
-.enter .header-row .brand {
-  transform: none;
-  animation: none;
-}
-/* Seul le rôle (Home) rise dans .intro ; le titre reste statique. */
-.enter .header-row .intro > .intro-role {
-  filter: blur(3px);
-  transform: translateY(var(--rise-y));
-  animation: enter var(--motion-rise) var(--ease-emphasis) var(--stagger-step) forwards;
 }
 
-/* Case-study : même langage d'entrée que le reste du site (stagger blur+rise),
-   pour que la navigation work.html → projet ne casse pas l'orchestration. */
+/* Seul le rôle (Home) fade dans .intro ; le titre reste statique. */
+.enter .header-row .intro > .intro-role { opacity: 1; }
+html.ready .enter .header-row .intro > .intro-role {
+  animation-name: enter;
+  animation-duration: var(--motion-rise);
+  animation-timing-function: var(--ease-emphasis);
+  animation-delay: var(--stagger-step);
+  animation-fill-mode: both;
+  will-change: opacity;
+}
+
+/* Case-study : même langage d'entrée — opacity fade gaté par html.ready. */
 .case-study .case-bar,
 .case-study .case-meta,
 .case-study .case-thumbs,
-.case-study .case-stage {
-  filter: blur(3px);
-  transform: translateY(var(--rise-y));
-  animation: enter var(--motion-rise) var(--ease-emphasis) forwards;
+.case-study .case-stage { opacity: 1; }
+html.ready .case-study .case-bar,
+html.ready .case-study .case-meta,
+html.ready .case-study .case-thumbs,
+html.ready .case-study .case-stage {
+  animation-name: enter;
+  animation-duration: var(--motion-rise);
+  animation-timing-function: var(--ease-emphasis);
+  animation-fill-mode: both;
+  will-change: opacity;
 }
 .case-study .case-bar    { animation-delay: calc(var(--stagger-step) * 1); }
 .case-study .case-meta   { animation-delay: calc(var(--stagger-step) * 3); }
@@ -1739,18 +1750,15 @@ button.case-cta {
 .case-study .case-stage  { animation-delay: calc(var(--stagger-step) * 5); }
 
 @media (prefers-reduced-motion: reduce) {
-  .enter > *,
-  .enter .list > .list-item,
-  .enter .header-row .brand,
-  .enter .header-row .intro > .intro-role,
-  .case-study .case-bar,
-  .case-study .case-meta,
-  .case-study .case-thumbs,
-  .case-study .case-stage {
-    opacity: 1 !important;
-    filter: none !important;
-    transform: none !important;
+  html.ready .enter > *,
+  html.ready .enter .list > .list-item,
+  html.ready .enter .header-row .intro > .intro-role,
+  html.ready .case-study .case-bar,
+  html.ready .case-study .case-meta,
+  html.ready .case-study .case-thumbs,
+  html.ready .case-study .case-stage {
     animation: none !important;
+    opacity: 1 !important;
   }
   html { scroll-behavior: auto !important; }
 }

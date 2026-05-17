@@ -33,7 +33,21 @@
   <meta name="twitter:image" content="https://jaime-vm.com/assets/img/avatar.jpg" />
 
   <link rel="stylesheet" href="assets/css/reset.css" />
-  <link rel="stylesheet" href="assets/css/styles.css?v=61" />
+  <link rel="stylesheet" href="assets/css/styles.css?v=63" />
+  <script>
+    /* Page-load motion gate : pose .ready sur <html> AVANT first-paint, ce qui
+       déclenche le fade-in .enter (cf. CSS html.ready .enter > * { animation: enter both }).
+       Sans cette classe, contenu visible immédiatement = fallback no-JS propre.
+       Sur bfcache restore (back/forward), on retire .ready, force un reflow, puis
+       on la repose — l'animation rejoue, symétrie click-avant / browser-back. */
+    document.documentElement.classList.add('ready');
+    window.addEventListener('pageshow', function (e) {
+      if (!e.persisted) return;
+      document.documentElement.classList.remove('ready');
+      void document.documentElement.offsetHeight;
+      document.documentElement.classList.add('ready');
+    });
+  </script>
 
   <script type="application/ld+json">
   {
