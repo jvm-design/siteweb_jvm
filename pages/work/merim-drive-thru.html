@@ -66,24 +66,7 @@
   </script>
 
   <link rel="stylesheet" href="../../assets/css/reset.css" />
-  <link rel="stylesheet" href="../../assets/css/styles.css?v=60" />
-  <script>
-    /* VT cross-doc : pose .vt-arrival sur <html> pendant la transition pour
-       désactiver les rises .enter. La VT seule porte le mouvement (root
-       crossfade + coquille morph). Sans ce gate, le snapshot du nouveau doc
-       est capturé à l'état initial de .enter (flou+offset), créant un saut
-       au handoff entre pseudo et doc vivant. */
-    window.addEventListener('pagereveal', (e) => {
-      if (!e.viewTransition) return;
-      // Pose .vt-arrival et la GARDE pour toute la durée du doc. Retirer la
-      // classe à la fin de la VT relancerait l'animation .enter (changement
-      // de la propriété animation = restart) → flash de flou au handoff.
-      // Le nouveau doc cross-doc charge un <html> propre, donc la classe
-      // est posée sur ce nouveau doc à chaque arrivée VT. Le rise .enter
-      // reste réservé aux directs landings (saisie URL, refresh).
-      document.documentElement.classList.add('vt-arrival');
-    });
-  </script>
+  <link rel="stylesheet" href="../../assets/css/styles.css?v=61" />
 </head>
 <body class="case-study" data-slug="merim-drive-thru">
   <a class="skip-link" href="#case">Aller au contenu</a>

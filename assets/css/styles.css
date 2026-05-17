@@ -68,52 +68,6 @@ html {
 
 body { line-height: var(--lh-base); }
 
-/* ——— View Transitions (cross-document) ——— */
-@view-transition { navigation: auto; }
-
-.brand { view-transition-name: brand-avatar; }
-.site-nav { view-transition-name: primary-nav; }
-.site-footer { view-transition-name: site-footer; }
-.header-row h1,
-.page-title { view-transition-name: page-title; }
-
-/* Root : crossfade aligné sur la coquille (--motion-page). Combiné au gate
-   .vt-arrival (qui désactive .enter pendant la VT), le snapshot du nouveau
-   doc est capturé à l'état FINAL — donc le crossfade révèle une page propre,
-   sans saut au handoff. Un seul geste : fond + coquille en parallèle. */
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation-duration: var(--motion-page);
-  animation-timing-function: var(--ease);
-}
-
-::view-transition-old(brand-avatar),
-::view-transition-new(brand-avatar),
-::view-transition-old(primary-nav),
-::view-transition-new(primary-nav),
-::view-transition-old(page-title),
-::view-transition-new(page-title),
-::view-transition-old(site-footer),
-::view-transition-new(site-footer) {
-  animation-duration: var(--motion-page);
-  animation-timing-function: var(--ease-emphasis);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  ::view-transition-old(root),
-  ::view-transition-new(root),
-  ::view-transition-old(brand-avatar),
-  ::view-transition-new(brand-avatar),
-  ::view-transition-old(primary-nav),
-  ::view-transition-new(primary-nav),
-  ::view-transition-old(page-title),
-  ::view-transition-new(page-title),
-  ::view-transition-old(site-footer),
-  ::view-transition-new(site-footer) {
-    animation: none !important;
-  }
-}
-
 /* ——— Scrollbars : Ive/Newson — minimal, geometric, theme-aware.
    Slim track-less thumb, no border-radius (Newson : honest materials),
    colour adapts to text (light/dark) via color-mix. ——— */
@@ -1762,10 +1716,7 @@ button.case-cta {
   transform: none;
   animation: none;
 }
-/* L'H1 (.page-title / .header-row h1) porte view-transition-name : il
-   morph entre pages, donc on ne le rise pas — sinon la VT capturerait
-   le titre en blur+offset et morpherait vers cet état avant que .enter
-   ne le rétablisse. Seul le rôle (Home) rise. */
+/* Seul le rôle (Home) rise dans .intro ; le titre reste statique. */
 .enter .header-row .intro > .intro-role {
   filter: blur(3px);
   transform: translateY(var(--rise-y));
@@ -1786,28 +1737,6 @@ button.case-cta {
 .case-study .case-meta   { animation-delay: calc(var(--stagger-step) * 3); }
 .case-study .case-thumbs { animation-delay: calc(var(--stagger-step) * 4); }
 .case-study .case-stage  { animation-delay: calc(var(--stagger-step) * 5); }
-
-/* ——— VT cross-doc arrival gate ———
-   Pendant l'arrivée via cross-document View Transition, la VT seule porte
-   le mouvement (root crossfade + coquille morph). Les rises .enter sont
-   désactivés pour que le snapshot capture la page à son état final — pas
-   de saut au handoff entre pseudo et doc vivant. La classe .vt-arrival
-   est posée sur <html> par le listener pagereveal (inline en <head>) et
-   retirée à la fin de la transition.
-
-   En direct landing (saisie URL, refresh), .vt-arrival n'est jamais posée,
-   donc .enter joue normalement comme signature de première impression. */
-html.vt-arrival .enter > *,
-html.vt-arrival .enter .list > .list-item,
-html.vt-arrival .enter .header-row .intro > .intro-role,
-html.vt-arrival .case-study .case-bar,
-html.vt-arrival .case-study .case-meta,
-html.vt-arrival .case-study .case-thumbs,
-html.vt-arrival .case-study .case-stage {
-  animation: none !important;
-  filter: none !important;
-  transform: none !important;
-}
 
 @media (prefers-reduced-motion: reduce) {
   .enter > *,
