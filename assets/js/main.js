@@ -419,6 +419,9 @@ const applyPreviewConvention = async () => {
     tasks.push((async () => {
       const url = await resolvePreviewUrl(li.id, "tile");
       if (!url) return;
+      // A preview was resolved : release the placeholder so the museum-plate
+      // caption ("Visuels — mise à jour en cours") dissolves into real media.
+      thumb.removeAttribute("data-media");
       const ext = previewExt(url);
       const isVideo = PREVIEW_VIDEO_EXTS.has(ext);
       const isLottie = PREVIEW_LOTTIE_EXTS.has(ext);
@@ -611,6 +614,7 @@ const applyPreviewConvention = async () => {
             const media = makePreviewMedia(thumbUrl, "");
             if (media) {
               frame.style.background = "#000";
+              frame.removeAttribute("data-media");
               frame.appendChild(media);
               gateMediaToActiveAttr(media, li);
               // Ken Burns only on truly static images. Animated rasters
@@ -1304,6 +1308,11 @@ const initCaseStudy = () => {
     const nextLayer = buildLayer(src);
 
     if (nextLayer) {
+      // First real media on the stage : release the placeholder caption.
+      // Subsequent swaps may show empty interludes between scenes — but once
+      // the case study has surfaced any real visual we don't reinstate the
+      // "mise à jour" plate, the silence reads as composition, not absence.
+      stage.removeAttribute("data-media");
       // Insert BENEATH the current layer so the outgoing dissolves above it.
       if (currentLayer?.el && currentLayer.el.parentNode === stage) {
         stage.insertBefore(nextLayer.el, currentLayer.el);

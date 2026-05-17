@@ -17,6 +17,7 @@
   --accent: #0a0a0b;
 
   --font-sans: "Inter", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 
   --ease: cubic-bezier(0.4, 0, 0.2, 1);
   --ease-out: cubic-bezier(0, 0, 0.2, 1);
@@ -1066,6 +1067,69 @@ body.no-scroll { overflow: hidden; }
   z-index: 1;
   transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+/* Media placeholder — Ive/Newson : honest absence.
+   Frames awaiting real media read as a deliberate neutral surface,
+   with a small mono caption pinned at the bottom like a museum plate.
+   No simulated artwork, no decorative gradients. The attribute is
+   removed by main.js the moment a preview file is resolved & mounted,
+   so the placeholder dissolves cleanly into the real media. */
+[data-media="pending"] {
+  position: relative;
+  background:
+    color-mix(in srgb, var(--text) 3.5%, transparent) !important;
+  background-image: none !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text) 7%, transparent);
+}
+[data-media="pending"]::before,
+[data-media="pending"]::after {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  color: color-mix(in srgb, var(--text) 42%, transparent);
+  position: absolute;
+  bottom: 10px;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 3;
+}
+[data-media="pending"]::before {
+  content: "Visuels — mise à jour en cours";
+  left: 12px;
+}
+[data-media="pending"]::after {
+  content: "MAJ 05·2026";
+  right: 12px;
+}
+/* The stage is monumental — bump the caption a touch so it reads
+   from the viewing distance the stage commands. */
+.stage-frame[data-media="pending"]::before,
+.stage-frame[data-media="pending"]::after {
+  font-size: 0.6875rem;
+  bottom: 16px;
+}
+.stage-frame[data-media="pending"]::before { left: 18px; }
+.stage-frame[data-media="pending"]::after  { right: 18px; }
+
+/* List .thumb (work.html) — the colored gradient + bright monogram
+   gives way to a neutral surface with the monogram in muted ink.
+   The right-side date is dropped : at this tile size the monogram
+   already occupies the centre, two captions would crowd the row. */
+.list.craft .thumb[data-media="pending"] {
+  color: color-mix(in srgb, var(--text) 32%, transparent);
+  text-shadow: none;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--text) 7%, transparent);
+}
+.list.craft .thumb[data-media="pending"]::after { content: none; }
+.list.craft .thumb[data-media="pending"]::before {
+  bottom: 8px;
+  left: 10px;
+  font-size: 0.5rem;
+}
+
 [data-slug="autoya-mobile"] .stage-frame,
 [data-slug="autoya-mobile"] .thumb-frame { aspect-ratio: 1 / 1; }
 
