@@ -65,18 +65,29 @@ module.exports = async function handler(req, res) {
 
   const to = process.env.REQUEST_TO || DEFAULT_TO;
   const from = process.env.REQUEST_FROM || DEFAULT_FROM;
+  const hint = (process.env.LOCK_KEY_HINT || "").trim();
   const subject = `Demande de clé — ${email}`;
-  const text =
+  let text =
     `Email · ${email}\n` +
     `Téléphone · ${phone}\n` +
     `Consentement de rappel · oui\n\n` +
     `Demande ·\n${why}\n`;
-  const html =
+  let html =
     `<p><strong>Email</strong> · ${escapeHtml(email)}</p>` +
     `<p><strong>Téléphone</strong> · ${escapeHtml(phone)}</p>` +
     `<p><strong>Consentement de rappel</strong> · oui</p>` +
     `<p><strong>Demande</strong></p>` +
     `<p>${escapeHtml(why).replace(/\n/g, "<br>")}</p>`;
+  if (hint) {
+    text +=
+      `\n———————— RAPPEL PRIVÉ — ne pas citer en réponse ————————\n` +
+      `${hint}\n` +
+      `————————————————————————————————————————\n`;
+    html +=
+      `<hr style="border:none;border-top:1px solid #ddd;margin:1.5em 0 0.5em;">` +
+      `<p style="margin:0;font-size:0.75em;color:#a00;letter-spacing:0.04em;text-transform:uppercase;">Rappel privé — ne pas citer en réponse</p>` +
+      `<pre style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#f7f7f7;padding:0.75em 1em;border-radius:4px;white-space:pre-wrap;margin:0.5em 0 0;">${escapeHtml(hint)}</pre>`;
+  }
 
   try {
     const r = await fetch("https://api.resend.com/emails", {
