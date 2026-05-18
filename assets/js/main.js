@@ -1528,14 +1528,12 @@ const LOCK_MAILTO = "jaime.vile@gmail.com";
    Visitors can still request a key, but the entry input disappears.
    Useful if you want to handle every access manually for a period. */
 const LOCK_KEY_ENTRY_ENABLED = true;
-/* Per-recipient SHA-256 hashes. One entry = one issued key.
-   Issue a new key :  npm run issue-key -- "Label du destinataire"
-   The script prints the plaintext (à transmettre) and the hash (à coller ici).
-   Keep plaintext keys in a private vault — intentionally absent from the repo.
-   Revoke a key = delete its hash line below. */
-const LOCK_MAGICKEY_HASHES = new Set([
-  "c6d13af9b9e2f23c32caa8970df3c7daf693c633dafc93440f17f8f36f54e9ec", // 2026-05-18 · legacy
-]);
+/* Key validation is server-side. The plaintext key submitted by the visitor
+   is POSTed to /api/verify-key, which hashes it and looks it up in the
+   permanent hashes (declared in api/verify-key.js) and Vercel KV (where
+   dynamically issued keys live with a TTL).
+   Keys are issued automatically by /api/request-key when a visitor submits
+   the request form — no manual step required.  */
 
 const lockIsUnlocked = () => {
   try { return localStorage.getItem(LOCK_STORAGE_KEY) === "1"; } catch (_) { return false; }
@@ -1544,20 +1542,22 @@ const lockSetUnlocked = () => {
   try { localStorage.setItem(LOCK_STORAGE_KEY, "1"); } catch (_) {}
 };
 
-const sha256Hex = async (text) => {
-  const buf = new TextEncoder().encode(text);
-  const digest = await crypto.subtle.digest("SHA-256", buf);
-  return [...new Uint8Array(digest)]
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-};
-
 const lockVerifyKey = async (input) => {
   if (!input) return false;
+  const key = input.trim();
+  if (!key) return false;
   try {
-    const hash = await sha256Hex(input.trim());
-    return LOCK_MAGICKEY_HASHES.has(hash);
-  } catch (_) { return false; }
+    const r = await fetch("/api/verify-key", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key }),
+    });
+    if (!r.ok) return false;
+    const data = await r.json().catch(() => ({}));
+    return Boolean(data && data.ok);
+  } catch (_) {
+    return false;
+  }
 };
 
 const lockIsSlugLocked = async (slug) => {
