@@ -4,6 +4,7 @@
   "description": "Site personnel — HTML/CSS statique.",
   "private": true,
   "scripts": {
-    "dev": "npx --yes live-server --port=8765 --no-browser"
+    "dev": "npx --yes live-server --port=8765 --no-browser",
+    "issue-key": "bash tools/issue-key.sh"
   }
 }

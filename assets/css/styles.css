@@ -314,6 +314,14 @@ body { line-height: var(--lh-base); }
 }
 .site-nav a:hover,
 .site-nav a[aria-current="page"] { color: var(--text); }
+.site-nav__access {
+  margin-left: auto;
+  font-size: 0.8125rem;
+  letter-spacing: 0.06em;
+  align-self: center;
+  color: color-mix(in srgb, var(--muted) 75%, transparent) !important;
+}
+.site-nav__access:hover { color: var(--text) !important; }
 
 /* ——— Project list ——— */
 .list {
@@ -1918,4 +1926,395 @@ button.case-cta {
     animation: none !important;
     transform: none !important;
   }
+}
+
+/* ——— Lock — projects on invitation only ——— */
+
+/* Work.html craft grid : the "Sur invitation" hairline cartouche.
+   Inspired by museum captions — quiet, low-contrast, no padlock glyph. */
+/* Frosted vitrine — the underlying tile media stays loaded but is heavily
+   blurred, hinting at the project without revealing it. The "Sur invitation"
+   stamp sits in the middle as the lock signal. Monogram text is hidden via
+   color so the stamp owns the centre. */
+.list.craft .list-item.is-locked .thumb {
+  filter: none;
+  opacity: 1;
+  color: transparent;
+  text-shadow: none;
+}
+.list.craft .list-item.is-locked .thumb[data-media="pending"]::before,
+.list.craft .list-item.is-locked .thumb[data-media="pending"]::after {
+  content: none;
+}
+.list.craft .list-item.is-locked .thumb-media,
+.list.craft .list-item.is-locked .preview-lottie-host {
+  filter: blur(28px) saturate(1.1);
+  transform: scale(1.12);
+  transform-origin: center;
+}
+.list.craft .list-item.is-locked .thumb::after {
+  content: "Sur invitation";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.92);
+  background: rgba(0, 0, 0, 0.32);
+  padding: 0.4rem 0.7rem;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  border-radius: 2px;
+  text-shadow: none;
+  line-height: 1;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  transition: color 0.32s var(--ease), border-color 0.32s var(--ease), background 0.32s var(--ease);
+}
+.list.craft .list-item.is-locked a:hover .thumb::after,
+.list.craft .list-item.is-locked a:focus-visible .thumb::after {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.55);
+  background: rgba(0, 0, 0, 0.45);
+}
+
+/* Locked Merim QSR plates inherit the white tile background + contained
+   QSRLink mark from #merim-* rules above. With the global blur applied,
+   the brand becomes a soft frosted hint — readable as "QSR family" without
+   exposing detail. Stamp shifts to dark ink so it stays legible on white. */
+.list.craft .list-item.is-locked#merim-design-system .thumb::after,
+.list.craft .list-item.is-locked#merim-caisse .thumb::after,
+.list.craft .list-item.is-locked#merim-reporting .thumb::after {
+  color: rgba(11, 11, 12, 0.62);
+  border-color: rgba(11, 11, 12, 0.22);
+  background: rgba(255, 255, 255, 0.55);
+}
+.list.craft .list-item.is-locked#merim-design-system a:hover .thumb::after,
+.list.craft .list-item.is-locked#merim-design-system a:focus-visible .thumb::after,
+.list.craft .list-item.is-locked#merim-caisse a:hover .thumb::after,
+.list.craft .list-item.is-locked#merim-caisse a:focus-visible .thumb::after,
+.list.craft .list-item.is-locked#merim-reporting a:hover .thumb::after,
+.list.craft .list-item.is-locked#merim-reporting a:focus-visible .thumb::after {
+  color: rgba(11, 11, 12, 0.92);
+  border-color: rgba(11, 11, 12, 0.5);
+  background: rgba(255, 255, 255, 0.75);
+}
+
+/* Case study : veil + central invitation panel */
+.case-grid.is-locked-veil {
+  filter: blur(8px) saturate(0.7);
+  opacity: 0.32;
+  pointer-events: none;
+  user-select: none;
+}
+.lock-invite {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+}
+.lock-invite::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--bg) 78%, transparent);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+.lock-invite__inner {
+  position: relative;
+  max-width: 460px;
+  text-align: center;
+  padding: 2.5rem 1.75rem;
+}
+.lock-invite__eyebrow {
+  font-size: 0.6875rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 0.875rem;
+}
+.lock-invite__title {
+  font-size: 1.625rem;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  margin: 0 0 0.875rem;
+  color: var(--text);
+}
+.lock-invite__lede {
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--muted-2);
+  margin: 0 0 1.5rem;
+}
+.lock-invite__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* ——— Lock modal ——— */
+.lock-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.28s var(--ease);
+}
+.lock-modal[data-open] {
+  opacity: 1;
+  pointer-events: auto;
+}
+.lock-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--bg) 35%, #000 65%);
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+}
+.lock-modal__panel {
+  position: relative;
+  width: min(440px, 100%);
+  max-height: min(85vh, 720px);
+  overflow-y: auto;
+  background: var(--bg);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 2.5rem 2rem 1.5rem;
+  box-shadow:
+    0 30px 80px -20px rgba(0, 0, 0, 0.55),
+    0 10px 30px -10px rgba(0, 0, 0, 0.35);
+  transform: translateY(12px) scale(0.97);
+  transition: transform 0.32s var(--ease-out);
+}
+.lock-modal[data-open] .lock-modal__panel { transform: translateY(0) scale(1); }
+.lock-modal__close {
+  position: absolute;
+  top: 0.875rem;
+  right: 0.875rem;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  transition: color 0.2s var(--ease), background 0.2s var(--ease);
+}
+.lock-modal__close:hover { color: var(--text); background: var(--rule); }
+.lock-modal__close:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.lock-modal__eyebrow {
+  font-size: 0.6875rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 0.5rem;
+}
+.lock-modal__title {
+  font-size: 1.5rem;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin: 0 0 0.75rem;
+  color: var(--text);
+}
+.lock-modal__lede {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--muted-2);
+  margin: 0 0 1.5rem;
+}
+
+/* Lock form fields — hairline, calm */
+.lock-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+.lock-form.is-shaking { animation: lock-shake 0.32s var(--ease); }
+@keyframes lock-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
+}
+.lock-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3125rem;
+}
+.lock-field__label {
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+.lock-field input[type="text"],
+.lock-field input[type="email"],
+.lock-field input[type="tel"],
+.lock-field input[type="password"],
+.lock-field textarea {
+  width: 100%;
+  padding: 0.5rem 0.125rem;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  border-radius: 0;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.9375rem;
+  transition: border-color 0.2s var(--ease);
+}
+.lock-field input:focus,
+.lock-field textarea:focus {
+  outline: 0;
+  border-bottom-color: var(--text);
+}
+/* Neutralise le surlignage jaune/gris d'autofill Chrome-Safari pour rester
+   dans la même matière hairline que les autres champs. */
+.lock-field input:-webkit-autofill,
+.lock-field input:-webkit-autofill:hover,
+.lock-field input:-webkit-autofill:focus,
+.lock-field textarea:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px var(--bg) inset !important;
+  -webkit-text-fill-color: var(--text) !important;
+  caret-color: var(--text);
+  transition: background-color 5000s ease-in-out 0s;
+}
+.lock-field textarea {
+  resize: vertical;
+  min-height: 4.5rem;
+  line-height: 1.5;
+}
+.lock-field--check {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--muted-2);
+  margin-top: 0.25rem;
+}
+.lock-field--check input {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  margin: 0.2rem 0 0;
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-radius: 1px;
+  position: relative;
+  cursor: pointer;
+  transition: border-color 0.2s var(--ease), background 0.2s var(--ease);
+}
+.lock-field--check input:hover {
+  border-color: color-mix(in srgb, var(--text) 55%, transparent);
+}
+.lock-field--check input:checked {
+  background: var(--text);
+  border-color: var(--text);
+}
+.lock-field--check input:checked::after {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 0;
+  width: 5px;
+  height: 9px;
+  border: solid var(--bg);
+  border-width: 0 1px 1px 0;
+  transform: rotate(45deg);
+}
+.lock-field--check input:focus-visible {
+  outline: 1px solid var(--text);
+  outline-offset: 2px;
+}
+.lock-field--hp {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+.lock-error {
+  font-size: 0.8125rem;
+  color: var(--text);
+  margin: 0;
+  letter-spacing: 0.01em;
+}
+.lock-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+.lock-form__alt {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--rule);
+  text-align: center;
+}
+.lock-form__alt .lock-link { padding: 0.25rem 0.5rem; }
+.lock-btn {
+  appearance: none;
+  font: inherit;
+  font-size: 0.875rem;
+  letter-spacing: 0.01em;
+  padding: 0.7rem 1.35rem;
+  border-radius: 4px;
+  border: 1px solid var(--text);
+  background: var(--text);
+  color: var(--bg);
+  cursor: pointer;
+  transition: background 0.2s var(--ease), color 0.2s var(--ease);
+}
+.lock-btn:hover {
+  background: transparent;
+  color: var(--text);
+}
+.lock-link {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: var(--muted-2);
+  font: inherit;
+  font-size: 0.8125rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--rule);
+  cursor: pointer;
+  padding: 0.3rem 0;
+  transition: color 0.2s var(--ease);
+}
+.lock-link:hover { color: var(--text); }
+.lock-invite .lock-btn,
+.lock-invite .lock-link { align-self: center; }
+
+@media (prefers-reduced-motion: reduce) {
+  .lock-modal, .lock-modal__panel,
+  .list.craft .list-item.is-locked .lock-mark { transition: none !important; }
+  .lock-form.is-shaking { animation: none !important; }
+}
+
+@media (max-width: 640px) {
+  .lock-modal__panel { padding: 2.25rem 1.25rem 1.25rem; }
+  .lock-invite__title { font-size: 1.375rem; }
 }

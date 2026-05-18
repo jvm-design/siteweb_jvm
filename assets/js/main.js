@@ -1515,3 +1515,339 @@ applyPreviewConvention().then(() => {
   initCraftThumbs();
   initCaseStudy();
 });
+
+/* ——— Lock manager — soft-gate for projects on invitation only.
+   Auto-detected : a project is locked when its tile is missing OR any of
+   its four stages (stage-01..04) lacks a photo/video/asset. Add the missing
+   files in assets/previews/<slug>/ and the lock releases on the next visit.
+   Soft-gate only — anyone reading source can find the hash. Never commit
+   client visuals under NDA, even after a lock.  */
+const LOCK_STORAGE_KEY = "jvm:unlocked";
+const LOCK_MAILTO = "jaime.vile@gmail.com";
+/* Master switch — flip to false to disable the "J'ai déjà une clé" path.
+   Visitors can still request a key, but the entry input disappears.
+   Useful if you want to handle every access manually for a period. */
+const LOCK_KEY_ENTRY_ENABLED = true;
+/* Per-recipient SHA-256 hashes. One entry = one issued key.
+   Issue a new key :  npm run issue-key -- "Label du destinataire"
+   The script prints the plaintext (à transmettre) and the hash (à coller ici).
+   Keep plaintext keys in a private vault — intentionally absent from the repo.
+   Revoke a key = delete its hash line below. */
+const LOCK_MAGICKEY_HASHES = new Set([
+  "c6d13af9b9e2f23c32caa8970df3c7daf693c633dafc93440f17f8f36f54e9ec", // 2026-05-18 · legacy
+]);
+
+const lockIsUnlocked = () => {
+  try { return localStorage.getItem(LOCK_STORAGE_KEY) === "1"; } catch (_) { return false; }
+};
+const lockSetUnlocked = () => {
+  try { localStorage.setItem(LOCK_STORAGE_KEY, "1"); } catch (_) {}
+};
+
+const sha256Hex = async (text) => {
+  const buf = new TextEncoder().encode(text);
+  const digest = await crypto.subtle.digest("SHA-256", buf);
+  return [...new Uint8Array(digest)]
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+};
+
+const lockVerifyKey = async (input) => {
+  if (!input) return false;
+  try {
+    const hash = await sha256Hex(input.trim());
+    return LOCK_MAGICKEY_HASHES.has(hash);
+  } catch (_) { return false; }
+};
+
+const lockIsSlugLocked = async (slug) => {
+  // Locked when tile is missing OR any of the 4 stages lacks media.
+  // Tile is checked first as a fast-fail short-circuit.
+  const tile = await resolvePreviewUrl(slug, "tile");
+  if (!tile) return true;
+  const stages = await Promise.all(
+    [1, 2, 3, 4].map((n) => resolvePreviewUrl(slug, `stage-${String(n).padStart(2, "0")}`))
+  );
+  return stages.some((url) => !url);
+};
+
+const lockResolveLockedSet = async () => {
+  // Auto-detect candidates : every project listed on /work.html plus the
+  // current case-study slug if we're on one. Reuses sessionStorage cache.
+  const slugs = new Set();
+  document.querySelectorAll(".list.craft .list-item[id]").forEach((li) => slugs.add(li.id));
+  const body = document.body;
+  if (body.classList.contains("case-study")) {
+    const s = body.getAttribute("data-slug");
+    if (s) slugs.add(s);
+  }
+  const results = await Promise.all(
+    [...slugs].map(async (slug) => [slug, await lockIsSlugLocked(slug)])
+  );
+  return new Set(results.filter(([, locked]) => locked).map(([slug]) => slug));
+};
+
+let lockModalEl = null;
+const lockEnsureModal = () => {
+  if (lockModalEl) return lockModalEl;
+  const html = `
+<div class="lock-modal" hidden role="dialog" aria-modal="true" aria-labelledby="lock-title">
+  <div class="lock-modal__backdrop" data-lock-close></div>
+  <div class="lock-modal__panel" data-lock-view="request">
+    <button class="lock-modal__close" type="button" data-lock-close aria-label="Fermer">
+      <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M1 1 L13 13 M13 1 L1 13" stroke="currentColor" stroke-width="1" fill="none"/></svg>
+    </button>
+
+    <section data-lock-pane="request">
+      <h2 class="lock-modal__title" id="lock-title">Demander la clé</h2>
+      <p class="lock-modal__lede">Sous accord de confidentialité. Précisez votre demande, je vous transmets la clé à l'email indiqué.</p>
+      <form class="lock-form" data-lock-form="request" novalidate>
+        <label class="lock-field">
+          <span class="lock-field__label">Email</span>
+          <input type="email" name="email" required autocomplete="email" placeholder="vous@exemple.com" />
+        </label>
+        <label class="lock-field">
+          <span class="lock-field__label">Téléphone</span>
+          <input type="tel" name="phone" required pattern="0[67][\\s.\\-]?([0-9][\\s.\\-]?){8}" placeholder="06 12 34 56 78" />
+        </label>
+        <label class="lock-field">
+          <span class="lock-field__label">Demande</span>
+          <textarea name="why" rows="4" required placeholder="Qui vous êtes, et ce que vous proposez."></textarea>
+        </label>
+        <label class="lock-field lock-field--check">
+          <input type="checkbox" name="consent" required />
+          <span>J'accepte d'être recontacté·e par téléphone à propos de cette demande.</span>
+        </label>
+        <div class="lock-field lock-field--hp" aria-hidden="true">
+          <label>Ne rien remplir<input type="text" name="hp" tabindex="-1" autocomplete="off" /></label>
+        </div>
+        <div class="lock-form__actions">
+          <button type="submit" class="lock-btn" data-lock-submit>Envoyer</button>
+        </div>
+        <div class="lock-form__alt">
+          <button type="button" class="lock-link" data-lock-switch="key">J'ai déjà une clé</button>
+        </div>
+      </form>
+    </section>
+
+    <section data-lock-pane="thanks" hidden>
+      <h2 class="lock-modal__title">Demande envoyée</h2>
+      <p class="lock-modal__lede">Merci. Je reviens vers vous rapidement avec la clé d'accès, à l'adresse indiquée.</p>
+      <div class="lock-form__actions">
+        <button type="button" class="lock-btn" data-lock-close>Fermer</button>
+      </div>
+    </section>
+
+    <section data-lock-pane="key" hidden>
+      <h2 class="lock-modal__title">Saisir la clé</h2>
+      <p class="lock-modal__lede">La clé déverrouille les cas d'étude protégés en une fois.</p>
+      <form class="lock-form" data-lock-form="key" novalidate>
+        <label class="lock-field">
+          <span class="lock-field__label">Clé</span>
+          <input type="password" name="key" required autocomplete="off" autocapitalize="off" spellcheck="false" />
+        </label>
+        <p class="lock-error" data-lock-error hidden>Clé non reconnue.</p>
+        <div class="lock-form__actions">
+          <button type="submit" class="lock-btn">Déverrouiller</button>
+        </div>
+        <div class="lock-form__alt">
+          <button type="button" class="lock-link" data-lock-switch="request">Demander une clé</button>
+        </div>
+      </form>
+    </section>
+  </div>
+</div>`;
+  const tpl = document.createElement("div");
+  tpl.innerHTML = html.trim();
+  lockModalEl = tpl.firstElementChild;
+  document.body.appendChild(lockModalEl);
+
+  // Master switch — when key entry is disabled, the "key" pane is removed and
+  // the link from the request view that would jump to it is hidden too.
+  if (!LOCK_KEY_ENTRY_ENABLED) {
+    lockModalEl.querySelectorAll('[data-lock-pane="key"]').forEach((el) => el.remove());
+    lockModalEl.querySelectorAll('[data-lock-switch="key"]').forEach((el) => el.remove());
+  }
+
+  lockModalEl.querySelectorAll("[data-lock-close]").forEach((el) => {
+    el.addEventListener("click", lockCloseModal);
+  });
+  lockModalEl.querySelectorAll("[data-lock-switch]").forEach((el) => {
+    el.addEventListener("click", () => lockSwitchView(el.getAttribute("data-lock-switch")));
+  });
+
+  lockModalEl.querySelector('[data-lock-form="request"]').addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const f = e.target;
+    if (!f.checkValidity()) { f.reportValidity(); return; }
+    const submitBtn = f.querySelector("[data-lock-submit]");
+    const submitLabel = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Envoi…";
+    try {
+      const r = await fetch("/api/request-key", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: f.elements.email.value.trim(),
+          phone: f.elements.phone.value.trim(),
+          why: f.elements.why.value.trim(),
+          consent: f.elements.consent.checked,
+          hp: f.elements.hp ? f.elements.hp.value : "",
+        }),
+      });
+      const data = await r.json().catch(() => ({}));
+      if (r.ok && data.ok) {
+        f.reset();
+        lockSwitchView("thanks");
+      }
+    } catch (_) {
+      // Silent fail — re-enable the button and let the user retry.
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = submitLabel;
+    }
+  });
+
+  const keyForm = lockModalEl.querySelector('[data-lock-form="key"]');
+  if (keyForm) {
+    keyForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const errEl = lockModalEl.querySelector("[data-lock-error]");
+      errEl.hidden = true;
+      const ok = await lockVerifyKey(keyForm.elements.key.value);
+      if (ok) {
+        lockSetUnlocked();
+        keyForm.reset();
+        lockCloseModal();
+        lockRemoveAllLocks();
+      } else {
+        errEl.hidden = false;
+        keyForm.classList.remove("is-shaking");
+        void keyForm.offsetWidth;
+        keyForm.classList.add("is-shaking");
+      }
+    });
+  }
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && lockModalEl && !lockModalEl.hidden) lockCloseModal();
+  });
+
+  return lockModalEl;
+};
+
+const lockSwitchView = (view) => {
+  if (!lockModalEl) return;
+  // Master switch fallback : if key entry is disabled, force the request view.
+  if (view === "key" && !LOCK_KEY_ENTRY_ENABLED) view = "request";
+  const panel = lockModalEl.querySelector(".lock-modal__panel");
+  panel.setAttribute("data-lock-view", view);
+  lockModalEl.querySelectorAll("[data-lock-pane]").forEach((p) => {
+    p.hidden = p.getAttribute("data-lock-pane") !== view;
+  });
+  const input = lockModalEl.querySelector(`[data-lock-pane="${view}"] input`);
+  if (input) setTimeout(() => input.focus(), 60);
+};
+
+const lockOpenModal = (initialView = "request") => {
+  lockEnsureModal();
+  lockModalEl.hidden = false;
+  requestAnimationFrame(() => lockModalEl.setAttribute("data-open", ""));
+  document.body.classList.add("no-scroll");
+  lockSwitchView(initialView);
+};
+
+const lockCloseModal = () => {
+  if (!lockModalEl || lockModalEl.hidden) return;
+  lockModalEl.removeAttribute("data-open");
+  document.body.classList.remove("no-scroll");
+  setTimeout(() => { if (lockModalEl) lockModalEl.hidden = true; }, 320);
+};
+
+const lockApplyToGrid = (lockedSet) => {
+  document.querySelectorAll(".list.craft .list-item[id]").forEach((li) => {
+    if (!lockedSet.has(li.id)) return;
+    li.classList.add("is-locked");
+    const a = li.querySelector("a");
+    if (a && !a.dataset.lockBound) {
+      a.dataset.lockBound = "1";
+      a.addEventListener("click", (e) => {
+        if (lockIsUnlocked()) return;
+        e.preventDefault();
+        lockOpenModal("request");
+      });
+    }
+  });
+};
+
+const lockApplyToCaseStudy = (lockedSet) => {
+  const body = document.body;
+  if (!body.classList.contains("case-study")) return;
+  const slug = body.getAttribute("data-slug");
+  if (!slug || !lockedSet.has(slug)) return;
+
+  const grid = document.querySelector(".case-grid");
+  if (grid) grid.classList.add("is-locked-veil");
+
+  if (document.querySelector(".lock-invite")) return;
+  const panel = document.createElement("aside");
+  panel.className = "lock-invite";
+  const keyEntryHtml = LOCK_KEY_ENTRY_ENABLED
+    ? `<button type="button" class="lock-link" data-lock-open="key">J'ai déjà une clé</button>`
+    : "";
+  panel.innerHTML = `
+    <div class="lock-invite__inner">
+      <p class="lock-invite__eyebrow">Projet sur invitation</p>
+      <h2 class="lock-invite__title">Sous accord de confidentialité</h2>
+      <p class="lock-invite__lede">Le détail de ce projet n'est partagé que sur demande. Précisez votre intention et je vous transmets la clé.</p>
+      <div class="lock-invite__actions">
+        <button type="button" class="lock-btn" data-lock-open="request">Demander la clé</button>
+        ${keyEntryHtml}
+      </div>
+    </div>`;
+  body.appendChild(panel);
+  panel.querySelectorAll("[data-lock-open]").forEach((b) => {
+    b.addEventListener("click", () => lockOpenModal(b.getAttribute("data-lock-open")));
+  });
+};
+
+// Persistent "Accès" entry point in the site nav so a key-holder can re-enter
+// the key after cache clear without hunting for a locked card. Hidden when the
+// site is already unlocked or when key entry is disabled by the master switch.
+const lockInjectKeyEntryLink = () => {
+  if (!LOCK_KEY_ENTRY_ENABLED) return;
+  if (lockIsUnlocked()) return;
+  const nav = document.querySelector(".site-nav");
+  if (!nav || nav.querySelector("[data-lock-entry]")) return;
+  const a = document.createElement("a");
+  a.href = "#";
+  a.setAttribute("data-lock-entry", "");
+  a.className = "site-nav__access";
+  a.textContent = "Accès";
+  a.addEventListener("click", (e) => {
+    e.preventDefault();
+    lockOpenModal("key");
+  });
+  nav.appendChild(a);
+};
+
+const lockRemoveAllLocks = () => {
+  document.querySelectorAll(".list.craft .list-item.is-locked").forEach((li) => {
+    li.classList.remove("is-locked");
+  });
+  document.querySelectorAll(".case-grid.is-locked-veil").forEach((g) => g.classList.remove("is-locked-veil"));
+  document.querySelectorAll(".lock-invite").forEach((p) => p.remove());
+  document.querySelectorAll("[data-lock-entry]").forEach((a) => a.remove());
+};
+
+const initLockManager = async () => {
+  if (lockIsUnlocked()) return;
+  lockInjectKeyEntryLink();
+  const lockedSet = await lockResolveLockedSet();
+  if (lockedSet.size === 0) return;
+  lockApplyToGrid(lockedSet);
+  lockApplyToCaseStudy(lockedSet);
+};
+
+initLockManager();
