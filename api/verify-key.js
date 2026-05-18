@@ -8,9 +8,12 @@
 // requests. Never reveals which store matched or why a key was rejected.
 //
 // Required env vars when KV-backed dynamic keys are in use :
-//   KV_REST_API_URL      Auto-injected when a Vercel KV store is connected
-//   KV_REST_API_TOKEN    Auto-injected when a Vercel KV store is connected
-// If those are absent, only PERMANENT_HASHES is consulted (legacy fallback).
+//   KV_REST_API_URL      Auto-injected when an Upstash Redis store is
+//                        connected via the Vercel Marketplace.
+//   KV_REST_API_TOKEN    Auto-injected (same as above).
+//                        UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN
+//                        are accepted as fallbacks under the newer naming.
+// If both pairs are absent, only PERMANENT_HASHES is consulted.
 
 const crypto = require("crypto");
 
@@ -24,9 +27,14 @@ const PERMANENT_HASHES = new Set([
 const sha256Hex = (s) =>
   crypto.createHash("sha256").update(s, "utf8").digest("hex");
 
+function kvCreds() {
+  const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || "";
+  const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || "";
+  return { url: url.replace(/\/$/, ""), token };
+}
+
 async function kvGet(key) {
-  const url = process.env.KV_REST_API_URL;
-  const token = process.env.KV_REST_API_TOKEN;
+  const { url, token } = kvCreds();
   if (!url || !token) return null;
   try {
     const r = await fetch(`${url}/get/${encodeURIComponent(key)}`, {

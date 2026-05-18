@@ -9,8 +9,12 @@
 //
 // Required env vars (set in Vercel project settings → Environment Variables) :
 //   RESEND_API_KEY       API key from resend.com (free tier : 100 emails/day)
-//   KV_REST_API_URL      Auto-injected when a Vercel KV store is connected
-//   KV_REST_API_TOKEN    Auto-injected when a Vercel KV store is connected
+//   KV_REST_API_URL      Auto-injected when an Upstash Redis store is
+//                        connected via the Vercel Marketplace (the legacy
+//                        "Vercel KV" branding was sunset in 2025).
+//   KV_REST_API_TOKEN    Auto-injected (same as above).
+//                        UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN
+//                        are accepted as fallbacks under the newer naming.
 //
 // Optional env vars :
 //   REQUEST_TO           Destination address (defaults to jaime.vile@gmail.com)
@@ -40,9 +44,14 @@ const escapeHtml = (s) =>
 const sha256Hex = (s) => crypto.createHash("sha256").update(s, "utf8").digest("hex");
 const randomKey = () => crypto.randomBytes(18).toString("base64url");
 
+function kvCreds() {
+  const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || "";
+  const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || "";
+  return { url: url.replace(/\/$/, ""), token };
+}
+
 async function kvSetEx(key, value, ttlSeconds) {
-  const url = process.env.KV_REST_API_URL;
-  const token = process.env.KV_REST_API_TOKEN;
+  const { url, token } = kvCreds();
   if (!url || !token) throw new Error("KV not configured");
   const r = await fetch(`${url}/setex/${encodeURIComponent(key)}/${ttlSeconds}`, {
     method: "POST",
