@@ -661,6 +661,16 @@ body.no-scroll { overflow: hidden; }
 }
 .preview-media.active { opacity: 1; }
 .preview-lottie svg { width: 100% !important; height: 100% !important; display: block; }
+/* Provisional : QSRLink lockup on the Merim home-hover preview. Letterbox
+   the logo inside the 4:3 card on white and mute the gradient veil so the
+   brand reads cleanly. */
+.preview-media.preview-img[src*="/merim/home"] {
+  object-fit: contain;
+  padding: 12%;
+}
+.preview:has(.preview-img[src*="/merim/home"].active) .preview-inner::after {
+  display: none;
+}
 .preview-inner::after {
   content: "";
   position: absolute;
@@ -1152,6 +1162,23 @@ body.no-scroll { overflow: hidden; }
 }
 [data-slug="merim-drive-thru"] .thumb-frame {
   background: #fafafa;
+}
+
+/* QSRLink logo on Merim tiles : letterbox the lockup so it sits cleanly
+   on the 16:10 thumb. White background (!important beats the inline
+   gradient style on .thumb), and the lock-state blur from .is-locked
+   .thumb-media stays in force — the brand reads as a frosted "QSR
+   family" hint when sealed, becomes crisp once unlocked. */
+#merim-design-system .thumb,
+#merim-caisse .thumb,
+#merim-reporting .thumb {
+  background: #fff !important;
+}
+#merim-design-system .thumb-media,
+#merim-caisse .thumb-media,
+#merim-reporting .thumb-media {
+  object-fit: contain;
+  padding: 8%;
 }
 .stage-counter {
   position: absolute;
@@ -2019,6 +2046,9 @@ button.case-cta {
   place-items: center;
   padding: 1.5rem;
 }
+/* La case-bar reste cliquable au-dessus du voile : back / next disponibles
+   même sur une page projet verrouillée. */
+body:has(.lock-invite) .case-bar { z-index: 50; }
 .lock-invite::before {
   content: "";
   position: absolute;
@@ -2092,7 +2122,7 @@ button.case-cta {
   background: var(--bg);
   border: 1px solid var(--rule);
   border-radius: 6px;
-  padding: 2.5rem 2rem 1.5rem;
+  padding: 2.5rem 2rem;
   box-shadow:
     0 30px 80px -20px rgba(0, 0, 0, 0.55),
     0 10px 30px -10px rgba(0, 0, 0, 0.35);
@@ -2102,20 +2132,19 @@ button.case-cta {
 .lock-modal[data-open] .lock-modal__panel { transform: translateY(0) scale(1); }
 .lock-modal__close {
   position: absolute;
-  top: 0.875rem;
-  right: 0.875rem;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 9999px;
+  top: 1rem;
+  right: 1rem;
+  width: 1.5rem;
+  height: 1.5rem;
   display: grid;
   place-items: center;
   color: var(--muted);
   background: transparent;
   border: 0;
   cursor: pointer;
-  transition: color 0.2s var(--ease), background 0.2s var(--ease);
+  transition: color 0.2s var(--ease);
 }
-.lock-modal__close:hover { color: var(--text); background: var(--rule); }
+.lock-modal__close:hover { color: var(--text); }
 .lock-modal__close:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
@@ -2132,21 +2161,34 @@ button.case-cta {
   font-weight: 400;
   letter-spacing: -0.02em;
   line-height: 1.15;
-  margin: 0 0 0.75rem;
+  margin: 0 0 0.5rem;
   color: var(--text);
 }
 .lock-modal__lede {
   font-size: 0.875rem;
   line-height: 1.5;
   color: var(--muted-2);
-  margin: 0 0 1.5rem;
+  margin: 0 0 0.75rem;
+}
+/* Raccourci éditorial : l'alternative ("J'ai déjà une clé / Demander une clé")
+   est offerte AVANT le form, comme une sortie pour ceux qui n'ont rien à
+   remplir. Le footer du form ne porte plus qu'un seul CTA. */
+.lock-modal__shortcut {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 0 1.75rem;
 }
 
-/* Lock form fields — hairline, calm */
+/* Cross-fade entre panes (request → key → thanks) — même grammaire de
+   motion que le fade d'ouverture du modal. */
+[data-lock-pane] { transition: opacity 0.2s var(--ease); }
+
+/* Lock form fields — hairline, calm. Vertical rhythm sur multiples de 0.5rem :
+   gap 1, actions 1.5, alt 2 (avec hairline 1 + padding 1 dessous). */
 .lock-form {
   display: flex;
   flex-direction: column;
-  gap: 0.875rem;
+  gap: 1rem;
 }
 .lock-form.is-shaking { animation: lock-shake 0.32s var(--ease); }
 @keyframes lock-shake {
@@ -2233,7 +2275,9 @@ button.case-cta {
   background: var(--text);
   border-color: var(--text);
 }
-.lock-field--check input:checked::after {
+/* Checkmark : présent en permanence pour que la transition s'applique.
+   Au repos opacity 0 + scale 0.6 ; au :checked il s'incarne en douceur. */
+.lock-field--check input::after {
   content: "";
   position: absolute;
   left: 3px;
@@ -2242,11 +2286,30 @@ button.case-cta {
   height: 9px;
   border: solid var(--bg);
   border-width: 0 1px 1px 0;
-  transform: rotate(45deg);
+  transform: rotate(45deg) scale(0.6);
+  opacity: 0;
+  transition: opacity 0.2s var(--ease), transform 0.2s var(--ease-out);
+}
+.lock-field--check input:checked::after {
+  opacity: 1;
+  transform: rotate(45deg) scale(1);
 }
 .lock-field--check input:focus-visible {
   outline: 1px solid var(--text);
   outline-offset: 2px;
+}
+/* Marqueur visuel "requis" sur le consent — petit astérisque éditorial,
+   couleur var(--text) pour se détacher du label muted-2. */
+.lock-required {
+  font-style: normal;
+  color: var(--text);
+  margin-left: 0.125rem;
+}
+/* Si l'utilisateur tente de soumettre avec consent décoché, on souligne
+   visuellement la case (sinon la validation native est la seule retour). */
+.lock-form.is-checking .lock-field--check input:invalid {
+  border-color: var(--text);
+  box-shadow: 0 0 0 1px var(--text);
 }
 .lock-field--hp {
   position: absolute;
@@ -2264,32 +2327,27 @@ button.case-cta {
 .lock-form__actions {
   display: flex;
   justify-content: flex-end;
-  margin-top: 1rem;
-}
-.lock-form__alt {
   margin-top: 1.5rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--rule);
-  text-align: center;
 }
-.lock-form__alt .lock-link { padding: 0.25rem 0.5rem; }
+/* CTA hairline-underline — même langage éditorial que .case-cta du site,
+   pas de pill, pas de fill, juste du texte ancré sur une barre 1px. */
 .lock-btn {
   appearance: none;
   font: inherit;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
   letter-spacing: 0.01em;
-  padding: 0.7rem 1.35rem;
-  border-radius: 4px;
-  border: 1px solid var(--text);
-  background: var(--text);
-  color: var(--bg);
-  cursor: pointer;
-  transition: background 0.2s var(--ease), color 0.2s var(--ease);
-}
-.lock-btn:hover {
+  padding: 0 0 2px 0;
   background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--text);
+  border-radius: 0;
   color: var(--text);
+  cursor: pointer;
+  transition: opacity 0.2s var(--ease);
 }
+.lock-btn:hover { opacity: 0.7; }
+.lock-btn[disabled] { opacity: 0.4; cursor: default; }
 .lock-link {
   appearance: none;
   background: transparent;

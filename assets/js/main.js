@@ -1595,12 +1595,15 @@ const lockEnsureModal = () => {
   <div class="lock-modal__backdrop" data-lock-close></div>
   <div class="lock-modal__panel" data-lock-view="request">
     <button class="lock-modal__close" type="button" data-lock-close aria-label="Fermer">
-      <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M1 1 L13 13 M13 1 L1 13" stroke="currentColor" stroke-width="1" fill="none"/></svg>
+      <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M1 1 L11 11 M11 1 L1 11" stroke="currentColor" stroke-width="1" stroke-linecap="round" fill="none"/></svg>
     </button>
 
     <section data-lock-pane="request">
       <h2 class="lock-modal__title" id="lock-title">Demander la clé</h2>
       <p class="lock-modal__lede">Sous accord de confidentialité. Précisez votre demande, je vous transmets la clé à l'email indiqué.</p>
+      <div class="lock-modal__shortcut">
+        <button type="button" class="lock-link" data-lock-switch="key">Vous avez déjà une clé →</button>
+      </div>
       <form class="lock-form" data-lock-form="request" novalidate>
         <label class="lock-field">
           <span class="lock-field__label">Email</span>
@@ -1616,16 +1619,13 @@ const lockEnsureModal = () => {
         </label>
         <label class="lock-field lock-field--check">
           <input type="checkbox" name="consent" required />
-          <span>J'accepte d'être recontacté·e par téléphone à propos de cette demande.</span>
+          <span>J'accepte d'être recontacté·e par téléphone à propos de cette demande. <em class="lock-required" aria-hidden="true">*</em></span>
         </label>
         <div class="lock-field lock-field--hp" aria-hidden="true">
           <label>Ne rien remplir<input type="text" name="hp" tabindex="-1" autocomplete="off" /></label>
         </div>
         <div class="lock-form__actions">
-          <button type="submit" class="lock-btn" data-lock-submit>Envoyer</button>
-        </div>
-        <div class="lock-form__alt">
-          <button type="button" class="lock-link" data-lock-switch="key">J'ai déjà une clé</button>
+          <button type="submit" class="lock-btn" data-lock-submit>Envoyer →</button>
         </div>
       </form>
     </section>
@@ -1641,6 +1641,9 @@ const lockEnsureModal = () => {
     <section data-lock-pane="key" hidden>
       <h2 class="lock-modal__title">Saisir la clé</h2>
       <p class="lock-modal__lede">La clé déverrouille les cas d'étude protégés en une fois.</p>
+      <div class="lock-modal__shortcut">
+        <button type="button" class="lock-link" data-lock-switch="request">Pas encore de clé · Demander →</button>
+      </div>
       <form class="lock-form" data-lock-form="key" novalidate>
         <label class="lock-field">
           <span class="lock-field__label">Clé</span>
@@ -1648,10 +1651,7 @@ const lockEnsureModal = () => {
         </label>
         <p class="lock-error" data-lock-error hidden>Clé non reconnue.</p>
         <div class="lock-form__actions">
-          <button type="submit" class="lock-btn">Déverrouiller</button>
-        </div>
-        <div class="lock-form__alt">
-          <button type="button" class="lock-link" data-lock-switch="request">Demander une clé</button>
+          <button type="submit" class="lock-btn">Déverrouiller →</button>
         </div>
       </form>
     </section>
@@ -1679,7 +1679,12 @@ const lockEnsureModal = () => {
   lockModalEl.querySelector('[data-lock-form="request"]').addEventListener("submit", async (e) => {
     e.preventDefault();
     const f = e.target;
-    if (!f.checkValidity()) { f.reportValidity(); return; }
+    if (!f.checkValidity()) {
+      f.classList.add("is-checking");
+      f.reportValidity();
+      return;
+    }
+    f.classList.remove("is-checking");
     const submitBtn = f.querySelector("[data-lock-submit]");
     const submitLabel = submitBtn.textContent;
     submitBtn.disabled = true;
@@ -1742,12 +1747,43 @@ const lockSwitchView = (view) => {
   // Master switch fallback : if key entry is disabled, force the request view.
   if (view === "key" && !LOCK_KEY_ENTRY_ENABLED) view = "request";
   const panel = lockModalEl.querySelector(".lock-modal__panel");
-  panel.setAttribute("data-lock-view", view);
-  lockModalEl.querySelectorAll("[data-lock-pane]").forEach((p) => {
-    p.hidden = p.getAttribute("data-lock-pane") !== view;
-  });
-  const input = lockModalEl.querySelector(`[data-lock-pane="${view}"] input`);
-  if (input) setTimeout(() => input.focus(), 60);
+  const currentView = panel.getAttribute("data-lock-view");
+  if (currentView === view) return;
+
+  const nextPane = lockModalEl.querySelector(`[data-lock-pane="${view}"]`);
+  if (!nextPane) return;
+  const currentPane = lockModalEl.querySelector(`[data-lock-pane="${currentView}"]`);
+  const focusNext = () => {
+    const input = nextPane.querySelector("input");
+    if (input) setTimeout(() => input.focus(), 60);
+  };
+
+  // Instant swap when the modal is not yet open (initial set-up) — the modal's
+  // own fade-in animation will reveal the right pane without a double motion.
+  const isOpen = lockModalEl.hasAttribute("data-open");
+  if (!isOpen || !currentPane || currentPane === nextPane) {
+    panel.setAttribute("data-lock-view", view);
+    lockModalEl.querySelectorAll("[data-lock-pane]").forEach((p) => {
+      p.hidden = p.getAttribute("data-lock-pane") !== view;
+    });
+    focusNext();
+    return;
+  }
+
+  // Cross-fade between panes (200ms each side, same easing as the rest).
+  currentPane.style.opacity = "0";
+  setTimeout(() => {
+    currentPane.hidden = true;
+    currentPane.style.opacity = "";
+    panel.setAttribute("data-lock-view", view);
+    nextPane.hidden = false;
+    nextPane.style.opacity = "0";
+    requestAnimationFrame(() => {
+      nextPane.style.opacity = "1";
+      setTimeout(() => { nextPane.style.opacity = ""; }, 220);
+    });
+    focusNext();
+  }, 200);
 };
 
 const lockOpenModal = (initialView = "request") => {
@@ -1802,7 +1838,7 @@ const lockApplyToCaseStudy = (lockedSet) => {
       <h2 class="lock-invite__title">Sous accord de confidentialité</h2>
       <p class="lock-invite__lede">Le détail de ce projet n'est partagé que sur demande. Précisez votre intention et je vous transmets la clé.</p>
       <div class="lock-invite__actions">
-        <button type="button" class="lock-btn" data-lock-open="request">Demander la clé</button>
+        <button type="button" class="lock-btn" data-lock-open="request">Demander la clé →</button>
         ${keyEntryHtml}
       </div>
     </div>`;
