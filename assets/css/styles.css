@@ -22,6 +22,25 @@
   --ease: cubic-bezier(0.4, 0, 0.2, 1);
   --ease-out: cubic-bezier(0, 0, 0.2, 1);
 
+  /* ——— Motion tokens (système unique, cf. spec §2) ——— */
+  --d-instant: 120ms;
+  --d-quick:   200ms;
+  --d-short:   320ms;
+  --d-base:    480ms;
+  --d-long:    560ms;
+
+  --e-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --e-out:      cubic-bezier(0.22, 1, 0.36, 1);
+  --e-in:       cubic-bezier(0.64, 0, 0.78, 0);
+  --e-material: cubic-bezier(0.32, 1.06, 0.5, 1);
+
+  --m-hairline: 1px;
+  --m-nudge:    6px;
+  --m-rise:    10px;
+
+  --o-veil:  0.04;
+  --o-muted: 0.6;
+
   --col: 42rem;
   --pad-x: 2rem;
   --pad-y: 6rem;
@@ -57,32 +76,74 @@ html {
 
 body { line-height: var(--lh-base); }
 
-/* ——— View Transitions (cross-document) ——— */
+/* ——— View Transitions (cross-document) — cf. spec motion §4 ———
+   Philosophie : cross-fade enrichi avec translation Y subliminale.
+   Trois actes : sortie courte accélérée, transit où l'avatar morphe,
+   arrivée plus longue décélérée. Seul l'avatar (image) morphe ; les
+   nav-items cross-fadent individuellement pour ne pas se déformer
+   avec la translation du root. */
 @view-transition { navigation: auto; }
 
-.brand { view-transition-name: brand-avatar; }
-.site-nav { view-transition-name: primary-nav; }
-.site-footer { view-transition-name: site-footer; }
+.brand img { view-transition-name: brand-avatar; }
+.site-nav a[href$="index.html"]   { view-transition-name: nav-home; }
+.site-nav a[href$="about.html"]   { view-transition-name: nav-about; }
+.site-nav a[href$="contact.html"] { view-transition-name: nav-contact; }
+.site-nav a[href$="work.html"]    { view-transition-name: nav-work; }
+.site-nav__access                 { view-transition-name: nav-access; }
 
-::view-transition-old(root),
+/* Acte I — Sortie : se lâche vers le bas, contre le sens de la nav. */
+@keyframes page-out-forward {
+  from { opacity: 1; transform: translate3d(0, 0, 0); }
+  to   { opacity: 0; transform: translate3d(-8px, var(--m-nudge), 0); }
+}
+@keyframes page-out-backward {
+  from { opacity: 1; transform: translate3d(0, 0, 0); }
+  to   { opacity: 0; transform: translate3d(8px, var(--m-nudge), 0); }
+}
+
+/* Acte III — Arrivée : vient du bas, se pose dans le sens de la nav. */
+@keyframes page-in-forward {
+  from { opacity: 0; transform: translate3d(8px, var(--m-rise), 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes page-in-backward {
+  from { opacity: 0; transform: translate3d(-8px, var(--m-rise), 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+/* Branchement par direction (posée par main.js au clic). */
+html[data-nav-dir="forward"]  ::view-transition-old(root) {
+  animation: page-out-forward  var(--d-short) var(--e-in)  both;
+}
+html[data-nav-dir="forward"]  ::view-transition-new(root) {
+  animation: page-in-forward   var(--d-base)  var(--e-out) 140ms both;
+}
+html[data-nav-dir="backward"] ::view-transition-old(root) {
+  animation: page-out-backward var(--d-short) var(--e-in)  both;
+}
+html[data-nav-dir="backward"] ::view-transition-new(root) {
+  animation: page-in-backward  var(--d-base)  var(--e-out) 140ms both;
+}
+
+/* Fallback (première nav, lien direct, popstate) : forward par défaut. */
+::view-transition-old(root) {
+  animation: page-out-forward var(--d-short) var(--e-in) both;
+}
 ::view-transition-new(root) {
-  animation-duration: 0.4s;
-  animation-timing-function: var(--ease);
+  animation: page-in-forward var(--d-base) var(--e-out) 140ms both;
+}
+
+/* Acte II — Avatar : objet physique qui glisse et se pose. Pas de fade,
+   seul le morph position/taille joue. Easing material avec overshoot
+   léger (1.5 %) — imperceptible isolément, perceptible cumulé. */
+::view-transition-group(brand-avatar) {
+  animation-duration: var(--d-long);
+  animation-timing-function: var(--e-material);
 }
 ::view-transition-old(brand-avatar),
-::view-transition-new(brand-avatar),
-::view-transition-old(primary-nav),
-::view-transition-new(primary-nav) {
-  animation-duration: 0.5s;
-  animation-timing-function: var(--ease);
-}
-/* Footer morphs between layouts — main pages (centered --col, blurred)
-   and case-study (full-width 12-col rail, transparent). Slightly slower
-   to weight the geometric change. */
-::view-transition-old(site-footer),
-::view-transition-new(site-footer) {
-  animation-duration: 0.55s;
-  animation-timing-function: var(--ease);
+::view-transition-new(brand-avatar) {
+  animation: none;
+  mix-blend-mode: normal;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -90,10 +151,7 @@ body { line-height: var(--lh-base); }
   ::view-transition-new(root),
   ::view-transition-old(brand-avatar),
   ::view-transition-new(brand-avatar),
-  ::view-transition-old(primary-nav),
-  ::view-transition-new(primary-nav),
-  ::view-transition-old(site-footer),
-  ::view-transition-new(site-footer) {
+  ::view-transition-group(brand-avatar) {
     animation: none !important;
   }
 }

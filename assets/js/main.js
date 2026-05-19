@@ -1,3 +1,40 @@
+/* ——— Nav direction orchestrator — cf. spec motion §4.3 / §8 ———
+   Pose data-nav-dir="forward|backward" sur <html> au clic, AVANT que
+   la cross-document View Transition démarre. Le CSS branche les
+   keyframes directionnelles via html[data-nav-dir="…"] ::view-transition-*.
+   L'ordre canonique reflète celui de la nav : Accueil → À propos →
+   Contact → Projets → case studies. Les case studies sont tous au même
+   niveau (4), mais après Projets — naviguer entre eux reste « forward ». */
+(() => {
+  const ORDER = {
+    'index.html':   0,
+    'about.html':   1,
+    'contact.html': 2,
+    'work.html':    3,
+  };
+  const orderOf = (pathname) => {
+    const last = (pathname.split('/').pop() || 'index.html').toLowerCase();
+    if (last in ORDER) return ORDER[last];
+    if (pathname.includes('/pages/work/')) return 4;
+    return 99;
+  };
+  const setDir = (dir) => { document.documentElement.dataset.navDir = dir; };
+
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest('a[href]');
+    if (!a) return;
+    if (a.target === '_blank' || a.hasAttribute('download')) return;
+    if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    let url;
+    try { url = new URL(a.getAttribute('href'), location.href); }
+    catch (_) { return; }
+    if (url.origin !== location.origin) return;
+    setDir(orderOf(url.pathname) >= orderOf(location.pathname) ? 'forward' : 'backward');
+  }, true);
+
+  window.addEventListener('popstate', () => setDir('backward'));
+})();
+
 const navLinks = document.querySelectorAll(".site-nav a");
 const current = location.pathname.split("/").pop() || "index.html";
 navLinks.forEach((a) => {
