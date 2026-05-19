@@ -1,11 +1,18 @@
 /* ——— Enter animation orchestrator ———
-   Coordinates the CSS stagger-reveal (.enter) with the cross-document
-   View Transition so they sequence instead of overlapping.
-   - Direct load / external referrer : stagger plays immediately.
-   - Internal navigation with VT : stagger is SKIPPED — the VT crossfade
-     is the sole, confident motion. Adding .enter mid-VT would snap elements
-     to opacity:0 inside ::view-transition-new(root), causing a flash.
-   - Safari fallback (VT but no pagereveal) : same skip via referrer check. */
+   Two distinct motions depending on how the page is reached :
+
+   - Direct load / external referrer : full CSS stagger (.enter class).
+     opacity 0→1 + blur + translateY, the welcome reveal.
+
+   - Internal navigation with VT : NO .enter class (would snap elements
+     to opacity:0 inside ::view-transition-new(root), causing the flash
+     Cursor described). Instead, a transform-only settle animation runs
+     via Web Animations API in parallel with the VT crossfade. Because
+     it never touches opacity, there is no possible flash ; because it
+     uses element.animate() (not a class toggle), there is no snap to
+     the starting state — the animation defines its own keyframes.
+     Its tail emerges through the dissolving snapshots, giving content
+     a soft "settling into place" feel that bridges the two pages. */
 (() => {
   const enterContainer = document.querySelector('[data-enter]');
   const caseBody = document.body.classList.contains('case-study')
@@ -21,27 +28,63 @@
     if (caseBody) caseBody.classList.add('enter');
   };
 
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* Hand-picked targets skip elements that own a view-transition-name
+     (.brand, .site-nav, .site-footer — morphed by the VT itself). */
+  const playSettle = () => {
+    if (reduceMotion) return;
+    const targets = caseBody
+      ? caseBody.querySelectorAll('.case-bar, .case-meta, .case-thumbs, .case-stage')
+      : document.querySelectorAll('.col > .header-row > .intro, .col > .list > .list-item');
+    targets.forEach((el, i) => {
+      el.animate(
+        [
+          { transform: 'translateY(8px)', filter: 'blur(4px)' },
+          { transform: 'translateY(0)',   filter: 'none' }
+        ],
+        {
+          duration: 600,
+          delay: i * 50,
+          easing: 'cubic-bezier(0.2, 0.7, 0.2, 1)',
+          fill: 'backwards'
+        }
+      );
+    });
+  };
+
   const hasVT = typeof document.startViewTransition === 'function'
     || CSS.supports?.('view-transition-name', 'none');
+
+  const isInternalReferrer = () => {
+    if (!document.referrer) return false;
+    try { return new URL(document.referrer).origin === location.origin; }
+    catch (_) { return false; }
+  };
 
   if (hasVT && 'onpagereveal' in window) {
     window.addEventListener('pagereveal', (e) => {
       if (e.viewTransition) {
+        /* Best path : VT crossfade hides the live DOM ; the settle
+           animation runs underneath and its tail surfaces as the
+           snapshots dissolve. No flash, no snap. */
         handled = true;
-        return;
+        e.viewTransition.ready.then(playSettle).catch(() => {});
+      } else if (isInternalReferrer()) {
+        /* Internal nav but the browser/server didn't trigger a VT
+           (Safari, headers stripped, etc.). No snapshot to hide a
+           starting-state snap, so we skip the motion entirely —
+           the page just appears, which is still smooth. */
+        handled = true;
+      } else {
+        /* Direct load / external referrer : welcome reveal. */
+        applyEnter();
       }
-      applyEnter();
     }, { once: true });
     setTimeout(() => { if (!handled) applyEnter(); }, 800);
-  } else if (hasVT && document.referrer) {
-    try {
-      const ref = new URL(document.referrer);
-      if (ref.origin === location.origin) {
-        handled = true;
-        return;
-      }
-    } catch (_) {}
-    applyEnter();
+  } else if (hasVT && isInternalReferrer()) {
+    /* Safari / older Chromium : VT support but no pagereveal API.
+       Internal nav without snapshot-cover → skip motion (no snap risk). */
   } else {
     applyEnter();
   }
