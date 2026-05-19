@@ -1,31 +1,3 @@
-/* ——— Enter animation orchestrator ———
-   Une seule responsabilité : appliquer la classe .enter (stagger
-   blur+rise+fade) UNIQUEMENT au direct load ou avec un referrer externe.
-   Sur les navigations internes, le crossfade VT cross-document est
-   responsable seul de la motion — aucune classe ajoutée, aucune
-   animation JS, donc aucune chance de glitcher avec le crossfade. */
-(() => {
-  const enterContainer = document.querySelector('[data-enter]');
-  const caseBody = document.body.classList.contains('case-study')
-    ? document.body
-    : null;
-  if (!enterContainer && !caseBody) return;
-
-  const applyEnter = () => {
-    if (enterContainer) enterContainer.classList.add('enter');
-    if (caseBody) caseBody.classList.add('enter');
-  };
-
-  const isInternalReferrer = () => {
-    if (!document.referrer) return false;
-    try { return new URL(document.referrer).origin === location.origin; }
-    catch (_) { return false; }
-  };
-
-  if (isInternalReferrer()) return;
-  applyEnter();
-})();
-
 const navLinks = document.querySelectorAll(".site-nav a");
 const current = location.pathname.split("/").pop() || "index.html";
 navLinks.forEach((a) => {

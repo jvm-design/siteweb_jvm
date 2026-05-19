@@ -57,33 +57,31 @@ html {
 
 body { line-height: var(--lh-base); }
 
-/* ——— View Transitions (cross-document) ———
-   Philosophy : un seul geste entre pages. Le crossfade root porte la
-   transition, et l'avatar .brand morph en continu pour donner la
-   continuité d'identité. Aucun autre named element (la nav et le
-   footer crossfade avec le reste du root) — moins de pièces mobiles
-   = moins de glitches possibles. */
+/* ——— View Transitions (cross-document) ——— */
 @view-transition { navigation: auto; }
 
 .brand { view-transition-name: brand-avatar; }
+.site-nav { view-transition-name: primary-nav; }
+.site-footer { view-transition-name: site-footer; }
 
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation-duration: 0.65s;
+  animation-duration: 0.4s;
   animation-timing-function: var(--ease);
 }
-
-/* Brand avatar : jamais de fade — l'image reste pleinement visible en
-   permanence, seul le morph position/taille (géré par le groupe) joue.
-   Sans cette override, l'UA appliquerait fade-out + fade-in et l'avatar
-   disparaîtrait au milieu de la transition. */
 ::view-transition-old(brand-avatar),
-::view-transition-new(brand-avatar) {
-  animation: none;
-  mix-blend-mode: normal;
+::view-transition-new(brand-avatar),
+::view-transition-old(primary-nav),
+::view-transition-new(primary-nav) {
+  animation-duration: 0.5s;
+  animation-timing-function: var(--ease);
 }
-::view-transition-group(brand-avatar) {
-  animation-duration: 0.65s;
+/* Footer morphs between layouts — main pages (centered --col, blurred)
+   and case-study (full-width 12-col rail, transparent). Slightly slower
+   to weight the geometric change. */
+::view-transition-old(site-footer),
+::view-transition-new(site-footer) {
+  animation-duration: 0.55s;
   animation-timing-function: var(--ease);
 }
 
@@ -92,7 +90,10 @@ body { line-height: var(--lh-base); }
   ::view-transition-new(root),
   ::view-transition-old(brand-avatar),
   ::view-transition-new(brand-avatar),
-  ::view-transition-group(brand-avatar) {
+  ::view-transition-old(primary-nav),
+  ::view-transition-new(primary-nav),
+  ::view-transition-old(site-footer),
+  ::view-transition-new(site-footer) {
     animation: none !important;
   }
 }
@@ -1816,42 +1817,41 @@ button.case-cta {
   }
 }
 
-/* Les éléments nommés par la View Transition (brand-avatar, primary-nav)
-   sont morphés par la VT cross-document : on les exclut du stagger .enter
-   pour éviter le ghost/double-animation pendant le crossfade. */
-.enter .header-row .brand,
-.enter .site-nav {
-  opacity: 1 !important;
-  filter: none !important;
-  transform: none !important;
-  animation: none !important;
+/* L'avatar reste visuellement fixe pendant l'entrée :
+   on contre la translation du parent .header-row pour annuler le mouvement
+   vertical, tout en laissant l'opacité et le flou hérités s'appliquer. */
+.enter .header-row .brand {
+  transform: translateY(-16px);
+  animation: brand-hold 0.7s var(--ease-out) 0.05s forwards;
+}
+@keyframes brand-hold {
+  to { transform: translateY(0); }
 }
 
 /* Case-study : même langage d'entrée que le reste du site (stagger blur+rise),
-   pour que la navigation work.html → projet ne casse pas l'orchestration.
-   Conditionné à .enter (ajoutée par l'orchestrateur JS au bon moment). */
-.case-study.enter .case-bar,
-.case-study.enter .case-meta,
-.case-study.enter .case-thumbs,
-.case-study.enter .case-stage {
+   pour que la navigation work.html → projet ne casse pas l'orchestration. */
+.case-study .case-bar,
+.case-study .case-meta,
+.case-study .case-thumbs,
+.case-study .case-stage {
   opacity: 0;
   filter: blur(8px);
   transform: translateY(16px);
   animation: enter 0.7s var(--ease-out) forwards;
 }
-.case-study.enter .case-bar    { animation-delay: 0.05s; }
-.case-study.enter .case-meta   { animation-delay: 0.20s; }
-.case-study.enter .case-thumbs { animation-delay: 0.30s; }
-.case-study.enter .case-stage  { animation-delay: 0.35s; }
+.case-study .case-bar    { animation-delay: 0.05s; }
+.case-study .case-meta   { animation-delay: 0.20s; }
+.case-study .case-thumbs { animation-delay: 0.30s; }
+.case-study .case-stage  { animation-delay: 0.35s; }
 
 @media (prefers-reduced-motion: reduce) {
   .enter > *,
   .enter .list > .list-item,
   .enter .header-row .brand,
-  .case-study.enter .case-bar,
-  .case-study.enter .case-meta,
-  .case-study.enter .case-thumbs,
-  .case-study.enter .case-stage {
+  .case-study .case-bar,
+  .case-study .case-meta,
+  .case-study .case-thumbs,
+  .case-study .case-stage {
     opacity: 1 !important;
     filter: none !important;
     transform: none !important;
