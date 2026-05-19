@@ -1,42 +1,43 @@
 /* ——— Enter animation orchestrator ———
    Coordinates the CSS stagger-reveal (.enter) with the cross-document
    View Transition so they sequence instead of overlapping.
-   - Direct load / external referrer: stagger plays immediately (status quo).
-   - Internal navigation with VT: wait for the crossfade to be ready,
-     then trigger stagger so elements emerge as the old page dissolves.
-   - Safari fallback (VT but no pagereveal): delay stagger by VT duration. */
+   - Direct load / external referrer : stagger plays immediately.
+   - Internal navigation with VT : stagger is SKIPPED — the VT crossfade
+     is the sole, confident motion. Adding .enter mid-VT would snap elements
+     to opacity:0 inside ::view-transition-new(root), causing a flash.
+   - Safari fallback (VT but no pagereveal) : same skip via referrer check. */
 (() => {
   const enterContainer = document.querySelector('[data-enter]');
   const caseBody = document.body.classList.contains('case-study')
     ? document.body
     : null;
   if (!enterContainer && !caseBody) return;
+
+  let handled = false;
   const applyEnter = () => {
+    if (handled) return;
+    handled = true;
     if (enterContainer) enterContainer.classList.add('enter');
     if (caseBody) caseBody.classList.add('enter');
   };
+
   const hasVT = typeof document.startViewTransition === 'function'
     || CSS.supports?.('view-transition-name', 'none');
+
   if (hasVT && 'onpagereveal' in window) {
     window.addEventListener('pagereveal', (e) => {
       if (e.viewTransition) {
-        e.viewTransition.ready.then(() => {
-          requestAnimationFrame(() => applyEnter());
-        });
-      } else {
-        applyEnter();
+        handled = true;
+        return;
       }
+      applyEnter();
     }, { once: true });
-    setTimeout(() => {
-      if (!enterContainer?.classList.contains('enter') && !caseBody?.classList.contains('enter')) {
-        applyEnter();
-      }
-    }, 800);
+    setTimeout(() => { if (!handled) applyEnter(); }, 800);
   } else if (hasVT && document.referrer) {
     try {
       const ref = new URL(document.referrer);
       if (ref.origin === location.origin) {
-        setTimeout(applyEnter, 420);
+        handled = true;
         return;
       }
     } catch (_) {}
