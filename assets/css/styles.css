@@ -57,42 +57,33 @@ html {
 
 body { line-height: var(--lh-base); }
 
-/* ——— View Transitions (cross-document) ——— */
+/* ——— View Transitions (cross-document) ———
+   Philosophy : un seul geste entre pages. Le crossfade root porte la
+   transition, et l'avatar .brand morph en continu pour donner la
+   continuité d'identité. Aucun autre named element (la nav et le
+   footer crossfade avec le reste du root) — moins de pièces mobiles
+   = moins de glitches possibles. */
 @view-transition { navigation: auto; }
 
 .brand { view-transition-name: brand-avatar; }
-.site-nav { view-transition-name: primary-nav; }
-.site-footer { view-transition-name: site-footer; }
 
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation-duration: 0.55s;
+  animation-duration: 0.65s;
   animation-timing-function: var(--ease);
 }
-::view-transition-old(primary-nav),
-::view-transition-new(primary-nav) {
-  animation-duration: 0.5s;
-  animation-timing-function: var(--ease);
-}
-/* Brand avatar : pas de fade entre pages — l'image reste pleinement visible
-   en permanence, seul le morph de position/taille (géré par le groupe) joue.
-   Sans cette override, l'UA applique fade-out + fade-in et l'avatar
-   disparaît au milieu de la transition. */
+
+/* Brand avatar : jamais de fade — l'image reste pleinement visible en
+   permanence, seul le morph position/taille (géré par le groupe) joue.
+   Sans cette override, l'UA appliquerait fade-out + fade-in et l'avatar
+   disparaîtrait au milieu de la transition. */
 ::view-transition-old(brand-avatar),
 ::view-transition-new(brand-avatar) {
   animation: none;
   mix-blend-mode: normal;
 }
 ::view-transition-group(brand-avatar) {
-  animation-duration: 0.5s;
-  animation-timing-function: var(--ease);
-}
-/* Footer morphs between layouts — main pages (centered --col, blurred)
-   and case-study (full-width 12-col rail, transparent). Slightly slower
-   to weight the geometric change. */
-::view-transition-old(site-footer),
-::view-transition-new(site-footer) {
-  animation-duration: 0.55s;
+  animation-duration: 0.65s;
   animation-timing-function: var(--ease);
 }
 
@@ -101,11 +92,7 @@ body { line-height: var(--lh-base); }
   ::view-transition-new(root),
   ::view-transition-old(brand-avatar),
   ::view-transition-new(brand-avatar),
-  ::view-transition-group(brand-avatar),
-  ::view-transition-old(primary-nav),
-  ::view-transition-new(primary-nav),
-  ::view-transition-old(site-footer),
-  ::view-transition-new(site-footer) {
+  ::view-transition-group(brand-avatar) {
     animation: none !important;
   }
 }
