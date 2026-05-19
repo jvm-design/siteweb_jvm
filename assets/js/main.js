@@ -1,3 +1,51 @@
+/* ——— Enter animation orchestrator ———
+   Coordinates the CSS stagger-reveal (.enter) with the cross-document
+   View Transition so they sequence instead of overlapping.
+   - Direct load / external referrer: stagger plays immediately (status quo).
+   - Internal navigation with VT: wait for the crossfade to be ready,
+     then trigger stagger so elements emerge as the old page dissolves.
+   - Safari fallback (VT but no pagereveal): delay stagger by VT duration. */
+(() => {
+  const enterContainer = document.querySelector('[data-enter]');
+  const caseBody = document.body.classList.contains('case-study')
+    ? document.body
+    : null;
+  if (!enterContainer && !caseBody) return;
+  const applyEnter = () => {
+    if (enterContainer) enterContainer.classList.add('enter');
+    if (caseBody) caseBody.classList.add('enter');
+  };
+  const hasVT = typeof document.startViewTransition === 'function'
+    || CSS.supports?.('view-transition-name', 'none');
+  if (hasVT && 'onpagereveal' in window) {
+    window.addEventListener('pagereveal', (e) => {
+      if (e.viewTransition) {
+        e.viewTransition.ready.then(() => {
+          requestAnimationFrame(() => applyEnter());
+        });
+      } else {
+        applyEnter();
+      }
+    }, { once: true });
+    setTimeout(() => {
+      if (!enterContainer?.classList.contains('enter') && !caseBody?.classList.contains('enter')) {
+        applyEnter();
+      }
+    }, 800);
+  } else if (hasVT && document.referrer) {
+    try {
+      const ref = new URL(document.referrer);
+      if (ref.origin === location.origin) {
+        setTimeout(applyEnter, 420);
+        return;
+      }
+    } catch (_) {}
+    applyEnter();
+  } else {
+    applyEnter();
+  }
+})();
+
 const navLinks = document.querySelectorAll(".site-nav a");
 const current = location.pathname.split("/").pop() || "index.html";
 navLinks.forEach((a) => {
