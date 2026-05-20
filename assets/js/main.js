@@ -18,7 +18,16 @@
     if (pathname.includes('/pages/work/')) return 4;
     return 99;
   };
-  const setDir = (dir) => { document.documentElement.dataset.navDir = dir; };
+  /* Le CSS qui style les pseudos VT cross-document vient toujours du
+     NOUVEAU document (spec W3C VT level 2). Donc poser data-nav-dir sur
+     <html> de l'ancienne page est inutile : le nouveau doc démarre vierge.
+     On stocke la direction en sessionStorage au clic ; l'inline script
+     dans <head> de chaque page la lit dès le parsing et pose l'attribut
+     sur <html> avant que le browser n'évalue les styles VT. */
+  const setDir = (dir) => {
+    document.documentElement.dataset.navDir = dir;
+    try { sessionStorage.setItem('navDir', dir); } catch (_) {}
+  };
 
   document.addEventListener('click', (e) => {
     const a = e.target.closest('a[href]');
