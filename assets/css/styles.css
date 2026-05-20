@@ -7,6 +7,11 @@
 }
 
 :root {
+  /* Active la prise en charge native du dark mode par l'UA (scrollbars,
+     form controls, fond de fenêtre suivent prefers-color-scheme). Évite
+     aussi le flash de fond UA entre les snapshots de View Transition. */
+  color-scheme: light dark;
+
   /* Light mode tokens. Contrast (AA minimum on body text):
      text #0a0a0b on bg #fafafa = 20.3:1, muted-2 on bg = 6.4:1, muted on bg = 3.6:1 (decorative only). */
   --bg: #fafafa;
@@ -74,7 +79,12 @@ html {
   font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "ss01" 1;
 }
 
-body { line-height: var(--lh-base); }
+body {
+  line-height: var(--lh-base);
+  /* Fond opaque explicite : sans ça, body est transparent et la fenêtre
+     UA transparaît pendant le crossfade VT → flash blanc/noir. */
+  background-color: var(--bg);
+}
 
 /* ——— View Transitions (cross-document) — cf. spec motion §4 ———
    Philosophie : cross-fade enrichi avec translation Y subliminale.
@@ -131,6 +141,18 @@ html[data-nav-dir="backward"] ::view-transition-new(root) {
 }
 ::view-transition-new(root) {
   animation: page-in-forward var(--d-base) var(--e-out) 140ms both;
+}
+
+/* Fond opaque pendant tout le crossfade root : sans ça, entre la fin du
+   fade-out de l'ancien snapshot et le début du fade-in du nouveau, le
+   navigateur peint sa couleur de fenêtre par défaut → flash noir/blanc.
+   isolation: isolate sur l'image-pair garantit que les deux snapshots
+   se composent en isolation sans laisser passer le fond UA. */
+::view-transition-group(root) {
+  background-color: var(--bg);
+}
+::view-transition-image-pair(root) {
+  isolation: isolate;
 }
 
 /* Acte II — Avatar : objet physique qui glisse et se pose. Pas de fade,
