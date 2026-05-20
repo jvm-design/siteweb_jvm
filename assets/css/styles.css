@@ -86,113 +86,12 @@ body {
   background-color: var(--bg);
 }
 
-/* ——— View Transitions (cross-document) — cf. spec motion §4 ———
-   Philosophie : cross-fade enrichi avec translation Y subliminale.
-   Trois actes : sortie courte accélérée, transit où l'avatar morphe,
-   arrivée plus longue décélérée. Seul l'avatar (image) morphe ; les
-   nav-items cross-fadent individuellement pour ne pas se déformer
-   avec la translation du root. */
-@view-transition { navigation: auto; }
-
-/* view-transition-name sur .brand (l'anchor wrapper qui porte les styles
-   circulaires border-radius: 9999px + overflow: hidden), PAS sur .brand img.
-   Si on nomme l'img directement, le snapshot capture le rectangle natif de
-   l'image (637×1024 px) sans le clip du parent → avatar carré qui déborde
-   pendant la transition (bug observé sur Chrome/Arc/Safari). */
-.brand { view-transition-name: brand-avatar; }
-.site-nav a[href$="index.html"]   { view-transition-name: nav-home; }
-.site-nav a[href$="about.html"]   { view-transition-name: nav-about; }
-.site-nav a[href$="contact.html"] { view-transition-name: nav-contact; }
-.site-nav a[href$="work.html"]    { view-transition-name: nav-work; }
-.site-nav__access                 { view-transition-name: nav-access; }
-
-/* Acte I — Sortie : se lâche vers le bas. Translation X retirée pour
-   éliminer le "trou" latéral où le fond noir transparaissait pendant
-   le crossfade (cause du flash noir intermittent 7/15 sur Chrome/Arc/Safari).
-   Forward et backward partagent maintenant les mêmes keyframes — la
-   direction n'a plus d'effet visuel mais data-nav-dir reste posée pour
-   d'éventuels futurs réglages. */
-@keyframes page-out-forward {
-  from { opacity: 1; transform: translate3d(0, 0, 0); }
-  to   { opacity: 0; transform: translate3d(0, var(--m-nudge), 0); }
-}
-@keyframes page-out-backward {
-  from { opacity: 1; transform: translate3d(0, 0, 0); }
-  to   { opacity: 0; transform: translate3d(0, var(--m-nudge), 0); }
-}
-
-/* Acte III — Arrivée : vient du bas, se pose. Même logique : pas de X. */
-@keyframes page-in-forward {
-  from { opacity: 0; transform: translate3d(0, var(--m-rise), 0); }
-  to   { opacity: 1; transform: translate3d(0, 0, 0); }
-}
-@keyframes page-in-backward {
-  from { opacity: 0; transform: translate3d(0, var(--m-rise), 0); }
-  to   { opacity: 1; transform: translate3d(0, 0, 0); }
-}
-
-/* Branchement par direction (posée par main.js au clic). */
-html[data-nav-dir="forward"]  ::view-transition-old(root) {
-  animation: page-out-forward  250ms var(--e-in)  both;
-}
-html[data-nav-dir="forward"]  ::view-transition-new(root) {
-  animation: page-in-forward   250ms  var(--e-out) both;
-}
-html[data-nav-dir="backward"] ::view-transition-old(root) {
-  animation: page-out-backward 250ms var(--e-in)  both;
-}
-html[data-nav-dir="backward"] ::view-transition-new(root) {
-  animation: page-in-backward  250ms  var(--e-out) both;
-}
-
-/* Fallback (première nav, lien direct, popstate) : forward par défaut. */
-::view-transition-old(root) {
-  animation: page-out-forward 250ms var(--e-in) both;
-}
-::view-transition-new(root) {
-  animation: page-in-forward 250ms var(--e-out) both;
-}
-
-/* Fond opaque pendant tout le crossfade root : sans ça, entre la fin du
-   fade-out de l'ancien snapshot et le début du fade-in du nouveau, le
-   navigateur peint sa couleur de fenêtre par défaut → flash noir/blanc.
-   isolation: isolate sur l'image-pair garantit que les deux snapshots
-   se composent en isolation sans laisser passer le fond UA. */
-::view-transition-group(root) {
-  background-color: var(--bg);
-}
-::view-transition-image-pair(root) {
-  isolation: isolate;
-}
-
-/* Acte II — Avatar : objet physique qui glisse et se pose. Pas de fade,
-   seul le morph position/taille joue. Easing material avec overshoot
-   léger (1.5 %) — imperceptible isolément, perceptible cumulé. */
-::view-transition-group(brand-avatar) {
-  animation-duration: var(--d-long);
-  animation-timing-function: var(--e-material);
-}
-::view-transition-old(brand-avatar),
-::view-transition-new(brand-avatar) {
-  animation: none;
-  mix-blend-mode: normal;
-  /* Safety belt : force le clip circulaire sur les pseudos eux-mêmes.
-     Chrome/Arc/Safari peuvent perdre le border-radius hérité lors de la
-     capture du snapshot, surtout sur des éléments contenant des <img>.
-     Cette redondance garantit le cercle visible dans tous les browsers. */
-  border-radius: 9999px;
-  overflow: hidden;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  ::view-transition-old(root),
-  ::view-transition-new(root),
-  ::view-transition-old(brand-avatar),
-  ::view-transition-new(brand-avatar),
-  ::view-transition-group(brand-avatar) {
-    animation: none !important;
-  }
-}
+/* ——— View Transitions cross-document : RETIRÉES (cf. commit 013611f) ———
+   La cross-doc VT créait une divergence d'expérience entre browsers
+   (Chrome/Arc/Safari = morph + crossfade ; Firefox / vieux moteurs =
+   fallback rise .enter). Le rendu en prod ne matchait pas le fallback
+   testé. Conclusion 14 mai 2026 : on bascule sur le rise .enter comme
+   seul langage de motion entre pages — identique sur tous les browsers. */
 
 /* ——— Scrollbars : Ive/Newson — minimal, geometric, theme-aware.
    Slim track-less thumb, no border-radius (Newson : honest materials),

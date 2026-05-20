@@ -1,47 +1,12 @@
-/* ——— Nav direction orchestrator — cf. spec motion §4.3 / §8 ———
-   Pose data-nav-dir="forward|backward" sur <html> au clic, AVANT que
-   la cross-document View Transition démarre. Le CSS branche les
-   keyframes directionnelles via html[data-nav-dir="…"] ::view-transition-*.
-   L'ordre canonique reflète celui de la nav : Accueil → À propos →
-   Contact → Projets → case studies. Les case studies sont tous au même
-   niveau (4), mais après Projets — naviguer entre eux reste « forward ». */
+/* ——— Enter animation applicator ———
+   Plus de cross-doc View Transitions (cf. commit 013611f historique).
+   Le motion entre pages est désormais identique partout : rise + fade
+   .enter en CSS pur, joué au chargement de chaque page. Pas de logique
+   de direction, pas d'orchestration VT, pas de divergence cross-browser. */
 (() => {
-  const ORDER = {
-    'index.html':   0,
-    'about.html':   1,
-    'contact.html': 2,
-    'work.html':    3,
-  };
-  const orderOf = (pathname) => {
-    const last = (pathname.split('/').pop() || 'index.html').toLowerCase();
-    if (last in ORDER) return ORDER[last];
-    if (pathname.includes('/pages/work/')) return 4;
-    return 99;
-  };
-  /* Le CSS qui style les pseudos VT cross-document vient toujours du
-     NOUVEAU document (spec W3C VT level 2). Donc poser data-nav-dir sur
-     <html> de l'ancienne page est inutile : le nouveau doc démarre vierge.
-     On stocke la direction en sessionStorage au clic ; l'inline script
-     dans <head> de chaque page la lit dès le parsing et pose l'attribut
-     sur <html> avant que le browser n'évalue les styles VT. */
-  const setDir = (dir) => {
-    document.documentElement.dataset.navDir = dir;
-    try { sessionStorage.setItem('navDir', dir); } catch (_) {}
-  };
-
-  document.addEventListener('click', (e) => {
-    const a = e.target.closest('a[href]');
-    if (!a) return;
-    if (a.target === '_blank' || a.hasAttribute('download')) return;
-    if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-    let url;
-    try { url = new URL(a.getAttribute('href'), location.href); }
-    catch (_) { return; }
-    if (url.origin !== location.origin) return;
-    setDir(orderOf(url.pathname) >= orderOf(location.pathname) ? 'forward' : 'backward');
-  }, true);
-
-  window.addEventListener('popstate', () => setDir('backward'));
+  const enterContainer = document.querySelector('[data-enter]');
+  if (enterContainer) enterContainer.classList.add('enter');
+  if (document.body.classList.contains('case-study')) document.body.classList.add('enter');
 })();
 
 const navLinks = document.querySelectorAll(".site-nav a");
