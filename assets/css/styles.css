@@ -94,12 +94,25 @@ body {
    avec la translation du root. */
 @view-transition { navigation: auto; }
 
-.brand img { view-transition-name: brand-avatar; }
+/* view-transition-name sur .brand (l'anchor wrapper qui porte les styles
+   circulaires border-radius: 9999px + overflow: hidden), PAS sur .brand img.
+   Si on nomme l'img directement, le snapshot capture le rectangle natif de
+   l'image (637×1024 px) sans le clip du parent → avatar carré qui déborde
+   pendant la transition (bug observé sur Chrome/Arc/Safari). */
+.brand { view-transition-name: brand-avatar; }
 .site-nav a[href$="index.html"]   { view-transition-name: nav-home; }
 .site-nav a[href$="about.html"]   { view-transition-name: nav-about; }
 .site-nav a[href$="contact.html"] { view-transition-name: nav-contact; }
 .site-nav a[href$="work.html"]    { view-transition-name: nav-work; }
 .site-nav__access                 { view-transition-name: nav-access; }
+
+/* H1 nommé pour séquencer la sortie/arrivée des titres. Sans ce nom, les deux
+   h1 ("Jaime Villegas Maira" sur home et "Projets"/"À propos"/etc sur les
+   sous-pages) sont capturés dans le snapshot root et se chevauchent en
+   pleine opacité au milieu du crossfade. Avec un nom, on peut faire fade
+   l'ancien en premier, attendre, puis fade le nouveau — pas d'overlap. */
+.intro h1,
+.page-title { view-transition-name: page-title; }
 
 /* Acte I — Sortie : se lâche vers le bas, contre le sens de la nav. */
 @keyframes page-out-forward {
@@ -126,13 +139,13 @@ html[data-nav-dir="forward"]  ::view-transition-old(root) {
   animation: page-out-forward  var(--d-short) var(--e-in)  both;
 }
 html[data-nav-dir="forward"]  ::view-transition-new(root) {
-  animation: page-in-forward   var(--d-base)  var(--e-out) 140ms both;
+  animation: page-in-forward   var(--d-base)  var(--e-out) both;
 }
 html[data-nav-dir="backward"] ::view-transition-old(root) {
   animation: page-out-backward var(--d-short) var(--e-in)  both;
 }
 html[data-nav-dir="backward"] ::view-transition-new(root) {
-  animation: page-in-backward  var(--d-base)  var(--e-out) 140ms both;
+  animation: page-in-backward  var(--d-base)  var(--e-out) both;
 }
 
 /* Fallback (première nav, lien direct, popstate) : forward par défaut. */
@@ -140,7 +153,7 @@ html[data-nav-dir="backward"] ::view-transition-new(root) {
   animation: page-out-forward var(--d-short) var(--e-in) both;
 }
 ::view-transition-new(root) {
-  animation: page-in-forward var(--d-base) var(--e-out) 140ms both;
+  animation: page-in-forward var(--d-base) var(--e-out) both;
 }
 
 /* Fond opaque pendant tout le crossfade root : sans ça, entre la fin du
@@ -166,6 +179,25 @@ html[data-nav-dir="backward"] ::view-transition-new(root) {
 ::view-transition-new(brand-avatar) {
   animation: none;
   mix-blend-mode: normal;
+  /* Safety belt : force le clip circulaire sur les pseudos eux-mêmes.
+     Chrome/Arc/Safari peuvent perdre le border-radius hérité lors de la
+     capture du snapshot, surtout sur des éléments contenant des <img>.
+     Cette redondance garantit le cercle visible dans tous les browsers. */
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+/* Fade-out / fade-in séquencés pour le titre h1 (cf. view-transition-name:
+   page-title). L'ancien titre se retire vite (160ms), puis le nouveau
+   apparaît avec un décalage de 160ms → plus aucune fenêtre où les deux
+   titres sont visibles simultanément à leurs positions distinctes. */
+@keyframes vt-fade-out { from { opacity: 1 } to { opacity: 0 } }
+@keyframes vt-fade-in  { from { opacity: 0 } to { opacity: 1 } }
+::view-transition-old(page-title) {
+  animation: vt-fade-out 160ms var(--e-in) both;
+}
+::view-transition-new(page-title) {
+  animation: vt-fade-in 240ms var(--e-out) 160ms both;
 }
 
 @media (prefers-reduced-motion: reduce) {
