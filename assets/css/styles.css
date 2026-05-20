@@ -106,23 +106,28 @@ body {
 .site-nav a[href$="work.html"]    { view-transition-name: nav-work; }
 .site-nav__access                 { view-transition-name: nav-access; }
 
-/* Acte I — Sortie : se lâche vers le bas, contre le sens de la nav. */
+/* Acte I — Sortie : se lâche vers le bas. Translation X retirée pour
+   éliminer le "trou" latéral où le fond noir transparaissait pendant
+   le crossfade (cause du flash noir intermittent 7/15 sur Chrome/Arc/Safari).
+   Forward et backward partagent maintenant les mêmes keyframes — la
+   direction n'a plus d'effet visuel mais data-nav-dir reste posée pour
+   d'éventuels futurs réglages. */
 @keyframes page-out-forward {
   from { opacity: 1; transform: translate3d(0, 0, 0); }
-  to   { opacity: 0; transform: translate3d(-8px, var(--m-nudge), 0); }
+  to   { opacity: 0; transform: translate3d(0, var(--m-nudge), 0); }
 }
 @keyframes page-out-backward {
   from { opacity: 1; transform: translate3d(0, 0, 0); }
-  to   { opacity: 0; transform: translate3d(8px, var(--m-nudge), 0); }
+  to   { opacity: 0; transform: translate3d(0, var(--m-nudge), 0); }
 }
 
-/* Acte III — Arrivée : vient du bas, se pose dans le sens de la nav. */
+/* Acte III — Arrivée : vient du bas, se pose. Même logique : pas de X. */
 @keyframes page-in-forward {
-  from { opacity: 0; transform: translate3d(8px, var(--m-rise), 0); }
+  from { opacity: 0; transform: translate3d(0, var(--m-rise), 0); }
   to   { opacity: 1; transform: translate3d(0, 0, 0); }
 }
 @keyframes page-in-backward {
-  from { opacity: 0; transform: translate3d(-8px, var(--m-rise), 0); }
+  from { opacity: 0; transform: translate3d(0, var(--m-rise), 0); }
   to   { opacity: 1; transform: translate3d(0, 0, 0); }
 }
 
