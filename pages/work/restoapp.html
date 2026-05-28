@@ -2,6 +2,9 @@
 <html lang="fr-FR">
 <head>
   <meta charset="utf-8" />
+  <script>(function(){try{var l=localStorage.getItem("jvm-lang");if(l&&/^(fr|en|es)$/.test(l)){document.documentElement.lang=l==="fr"?"fr-FR":l;document.documentElement.setAttribute("data-lang",l);}}catch(e){}})();</script>
+  <script>(function(){var h=document.documentElement;var ok=function(){h.classList.add("motion-ok");};if(document.prerendering){document.addEventListener("prerenderingchange",ok,{once:true});}else if(document.visibilityState==="visible"){ok();}else{document.addEventListener("visibilitychange",function f(){if(document.visibilityState==="visible"){document.removeEventListener("visibilitychange",f);ok();}});}})();</script>
+  <noscript><style>.enter > *,.enter .list > .list-item,.enter .header-row .brand,.case-study .case-bar,.case-study .case-meta,.case-study .case-thumbs,.case-study .case-stage,.site-footer{opacity:1!important;filter:none!important;transform:none!important;animation:none!important}</style></noscript>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="light dark" />
   <style>html,body{background-color:#fafafa}@media (prefers-color-scheme:dark){html,body{background-color:#0b0b0c}}</style>
@@ -12,6 +15,8 @@
   <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
   <link rel="canonical" href="https://jaime-vm.com/pages/work/restoapp.html" />
   <link rel="alternate" hreflang="fr-FR" href="https://jaime-vm.com/pages/work/restoapp.html" />
+  <link rel="alternate" hreflang="en" href="https://jaime-vm.com/pages/work/restoapp.html?lang=en" />
+  <link rel="alternate" hreflang="es" href="https://jaime-vm.com/pages/work/restoapp.html?lang=es" />
   <link rel="alternate" hreflang="x-default" href="https://jaime-vm.com/pages/work/restoapp.html" />
   <meta name="theme-color" content="#fafafa" media="(prefers-color-scheme: light)" />
   <meta name="theme-color" content="#0b0b0c" media="(prefers-color-scheme: dark)" />
@@ -68,14 +73,14 @@
   </script>
 
   <link rel="stylesheet" href="../../assets/css/reset.css" />
-  <link rel="stylesheet" href="../../assets/css/styles.css?v=62" />
+  <link rel="stylesheet" href="../../assets/css/styles.css?v=80" />
 </head>
 <body class="case-study" data-slug="restoapp">
-  <a class="skip-link" href="#case">Aller au contenu</a>
+  <a class="skip-link" href="#case" data-i18n="skip">Aller au contenu</a>
 
   <header class="case-bar" role="banner">
     <div class="case-bar__back">
-      <a href="../work.html">← Tous les projets</a>
+      <a href="../work.html" data-i18n="case.back">← Projets</a>
     </div>
     <div class="case-bar__next">
       <a href="tdc-vendredi.html">
@@ -92,12 +97,12 @@
         <div class="case-meta-inner">
           <h1 class="case-title">RestoApp</h1>
           <p class="case-meta__sub">Freelance · 2025</p>
-          <p class="case-desc case-desc--lead">Une plateforme qui parle restauration, pas SaaS générique.</p>
-          <p class="case-desc">Plateforme SaaS B2B multi-tenant pour réseaux et établissements de restauration. App iOS : Chat temps réel par établissement, analytics de ventes, gestion de réseau et d'abonnements, intégrations POS, livraison, réservation.</p>
-          <p class="case-desc">Lead Product Manager &amp; Product Designer freelance. Vision produit, architecture data, design system Figma → SwiftUI.</p>
+          <p class="case-desc case-desc--lead" data-i18n="ra.lead">Une plateforme qui parle restauration, pas SaaS générique.</p>
+          <p class="case-desc" data-i18n="ra.desc1">Plateforme SaaS B2B multi-tenant pour réseaux et établissements de restauration. App iOS : Chat temps réel par établissement, analytics de ventes, gestion de réseau et d'abonnements, intégrations POS, livraison, réservation.</p>
+          <p class="case-desc" data-i18n="ra.desc2">Lead Product Manager &amp; Product Designer freelance. Vision produit, architecture data, design system Figma → SwiftUI.</p>
           <button class="case-cta case-cta--toggle" type="button" data-detail-toggle aria-expanded="false" aria-controls="case-detail">
-            <span class="case-cta__label" data-cta-state="closed">Plus d'information →</span>
-            <span class="case-cta__label" data-cta-state="open">← Revenir à la galerie</span>
+            <span class="case-cta__label" data-cta-state="closed" data-i18n="case.cta.more">Plus d'information →</span>
+            <span class="case-cta__label" data-cta-state="open" data-i18n="case.cta.back">← Revenir à la galerie</span>
           </button>
         </div>
       </aside>
@@ -107,27 +112,27 @@
         <li data-stage-src="">
           <span class="thumb-num">01 / 04</span>
           <div class="thumb-frame" data-media="pending" style="background: linear-gradient(135deg, #5a1414 0%, #c95252 100%);"></div>
-          <figcaption>App iOS — accueil opérationnel, KPIs, sélection multi-établissements.</figcaption>
+          <figcaption data-i18n="ra.thumb1">App iOS — accueil opérationnel, KPIs, sélection multi-établissements.</figcaption>
         </li>
         <li data-stage-src="">
           <span class="thumb-num">02 / 04</span>
           <div class="thumb-frame" data-media="pending" style="background: linear-gradient(135deg, #7f1d1d 0%, #e36a6a 100%);"></div>
-          <figcaption>Hub chat — canaux par établissement, DM, hashtags opérationnels.</figcaption>
+          <figcaption data-i18n="ra.thumb2">Hub chat — canaux par établissement, DM, hashtags opérationnels.</figcaption>
         </li>
         <li data-stage-src="">
           <span class="thumb-num">03 / 04</span>
           <div class="thumb-frame" data-media="pending" style="background: linear-gradient(135deg, #9a2828 0%, #f08585 100%);"></div>
-          <figcaption>Panneau web admin — réseau, comptes, intégrations, abonnements.</figcaption>
+          <figcaption data-i18n="ra.thumb3">Panneau web admin — réseau, comptes, intégrations, abonnements.</figcaption>
         </li>
         <li data-stage-src="">
           <span class="thumb-num">04 / 04</span>
           <div class="thumb-frame" data-media="pending" style="background: linear-gradient(135deg, #b03434 0%, #f87171 100%);"></div>
-          <figcaption>Architecture data — contrats TS partagés, RLS Supabase, WebSocket authentifié.</figcaption>
+          <figcaption data-i18n="ra.thumb4">Architecture data — contrats TS partagés, RLS Supabase, WebSocket authentifié.</figcaption>
         </li>
       </ol>
 
       <!-- Stage : sticky right, the revealed object -->
-      <section class="case-stage" aria-label="Galerie">
+      <section class="case-stage" aria-label="Galerie" data-i18n-attr="aria-label:case.gallery">
         <div class="stage-frame" data-media="pending" data-stage>
           <img class="stage-media stage-img" alt="" />
           <video class="stage-media stage-video" muted loop playsinline preload="metadata" aria-hidden="true"></video>
@@ -141,54 +146,54 @@
           <div class="case-detail__inner">
 
             <section class="case-detail__section" aria-labelledby="detail-role">
-              <p class="case-detail__kicker">Mon rôle</p>
+              <p class="case-detail__kicker" data-i18n="ra.role.kicker">Mon rôle</p>
               <h2 id="detail-role">Lead Product Manager &amp; Product Designer</h2>
-              <p class="case-detail__lead">Mission freelance entre Merim et Autoya — pilotage produit et design d'une plateforme SaaS multi-tenant pour la restauration, du cadrage stratégique au design system code.</p>
-              <p>Plateforme multi-canal&nbsp;: app iOS opérationnelle (équipes terrain), panneau web administrateur (direction&nbsp;/&nbsp;franchise), backend Node&nbsp;/&nbsp;TypeScript et données PostgreSQL via Supabase. Périmètre&nbsp;: stratégie, segmentation, architecture data, design system, sécurité.</p>
+              <p class="case-detail__lead" data-i18n="ra.role.lead">Mission freelance entre Merim et Autoya — pilotage produit et design d'une plateforme SaaS multi-tenant pour la restauration, du cadrage stratégique au design system code.</p>
+              <p data-i18n="ra.role.p">Plateforme multi-canal&nbsp;: app iOS opérationnelle (équipes terrain), panneau web administrateur (direction&nbsp;/&nbsp;franchise), backend Node&nbsp;/&nbsp;TypeScript et données PostgreSQL via Supabase. Périmètre&nbsp;: stratégie, segmentation, architecture data, design system, sécurité.</p>
               <ul class="case-detail__list">
-                <li><strong>Stratégie &amp; segmentation</strong> — distinction utilisateurs opérationnels (équipe, managers) vs acheteurs (rôle Payeur), offres à paliers (Starter&nbsp;/ Premium&nbsp;/ Franchise), parcours d'achat B2B.</li>
-                <li><strong>Design system mobile</strong> — couleurs charte, surfaces, typographie custom «&nbsp;Jaguar Exuberant&nbsp;», jetons (espacements, rayons), pont Figma → SwiftUI documenté, prise en compte safe area et Dynamic Island.</li>
-                <li><strong>Architecture produit</strong> — contrats TypeScript partagés (modèles, config API, événements WebSocket), enums métier en français dans le schéma base, Row Level Security côté Supabase.</li>
-                <li><strong>Flows utilisateurs</strong> — biométrie sans sacrifier le login classique, filtres pills par restaurant, drill-down ventes, séparation canaux&nbsp;/&nbsp;DM (usages Slack-like), filtres croisés établissement × hashtag opérationnel.</li>
+                <li data-i18n-html="ra.role.li1"><strong>Stratégie &amp; segmentation</strong> — distinction utilisateurs opérationnels (équipe, managers) vs acheteurs (rôle Payeur), offres à paliers (Starter&nbsp;/ Premium&nbsp;/ Franchise), parcours d'achat B2B.</li>
+                <li data-i18n-html="ra.role.li2"><strong>Design system mobile</strong> — couleurs charte, surfaces, typographie custom «&nbsp;Jaguar Exuberant&nbsp;», jetons (espacements, rayons), pont Figma → SwiftUI documenté, prise en compte safe area et Dynamic Island.</li>
+                <li data-i18n-html="ra.role.li3"><strong>Architecture produit</strong> — contrats TypeScript partagés (modèles, config API, événements WebSocket), enums métier en français dans le schéma base, Row Level Security côté Supabase.</li>
+                <li data-i18n-html="ra.role.li4"><strong>Flows utilisateurs</strong> — biométrie sans sacrifier le login classique, filtres pills par restaurant, drill-down ventes, séparation canaux&nbsp;/&nbsp;DM (usages Slack-like), filtres croisés établissement × hashtag opérationnel.</li>
               </ul>
-              <p class="case-detail__caveat">Ce que je n'ai pas fait&nbsp;: l'intégralité du code (équipe dev mobile&nbsp;/&nbsp;web&nbsp;/&nbsp;back), les négociations partenaires (POS, livraison, réservation), la commercialisation.</p>
+              <p class="case-detail__caveat" data-i18n="ra.role.caveat">Ce que je n'ai pas fait&nbsp;: l'intégralité du code (équipe dev mobile&nbsp;/&nbsp;web&nbsp;/&nbsp;back), les négociations partenaires (POS, livraison, réservation), la commercialisation.</p>
             </section>
 
             <section class="case-detail__section" aria-labelledby="detail-decisions">
-              <p class="case-detail__kicker">Trois décisions</p>
-              <h2 id="detail-decisions">Les arbitrages qui ont façonné la plateforme</h2>
+              <p class="case-detail__kicker" data-i18n="ra.dec.kicker">Trois décisions</p>
+              <h2 id="detail-decisions" data-i18n="ra.dec.h2">Les arbitrages qui ont façonné la plateforme</h2>
               <ol class="case-decisions" role="list">
                 <li>
                   <span class="case-decisions__index">01</span>
-                  <h3>Contrats TypeScript partagés entre iOS, web et API</h3>
-                  <p>Premier réflexe sur un projet multi-canal&nbsp;: laisser chaque équipe (iOS, web, back) définir ses modèles, et synchroniser plus tard. Réalité&nbsp;: la dérive entre canaux est inévitable, et coûte plus cher à corriger en production qu'à prévenir.</p>
-                  <p>J'ai imposé une couche `shared/` en TypeScript — modèles, config API, événements WebSocket. Source unique consommée par le web admin, l'API, et alignée côté SwiftUI. <strong>Coût</strong>&nbsp;: discipline d'architecture, monorepo à maintenir. <strong>Bénéfice</strong>&nbsp;: zéro désync entre canaux, refacto de modèle propagée partout.</p>
+                  <h3 data-i18n="ra.dec1.h3">Contrats TypeScript partagés entre iOS, web et API</h3>
+                  <p data-i18n="ra.dec1.p1">Premier réflexe sur un projet multi-canal&nbsp;: laisser chaque équipe (iOS, web, back) définir ses modèles, et synchroniser plus tard. Réalité&nbsp;: la dérive entre canaux est inévitable, et coûte plus cher à corriger en production qu'à prévenir.</p>
+                  <p data-i18n-html="ra.dec1.p2">J'ai imposé une couche `shared/` en TypeScript — modèles, config API, événements WebSocket. Source unique consommée par le web admin, l'API, et alignée côté SwiftUI. <strong>Coût</strong>&nbsp;: discipline d'architecture, monorepo à maintenir. <strong>Bénéfice</strong>&nbsp;: zéro désync entre canaux, refacto de modèle propagée partout.</p>
                 </li>
                 <li>
                   <span class="case-decisions__index">02</span>
-                  <h3>Plans tarifaires inscrits dans le schéma, pas dans le marketing</h3>
-                  <p>Tentation classique&nbsp;: définir les offres (Starter&nbsp;/&nbsp;Premium&nbsp;/&nbsp;Franchise) comme un attribut «&nbsp;marketing&nbsp;» et laisser l'application gérer les plafonds. Risque&nbsp;: utilisateurs Starter qui contournent les limites via API, dérogations custom par enseigne, monétisation érodée.</p>
-                  <p>J'ai inscrit les plafonds d'établissements (1&nbsp;/&nbsp;3&nbsp;/&nbsp;sur mesure) dans les modèles partagés <em>et</em> dans le schéma PostgreSQL. <strong>Coût</strong>&nbsp;: couplage fort offre&nbsp;/&nbsp;data, évolution tarifaire = migration. <strong>Bénéfice</strong>&nbsp;: monétisation par construction, pas de contournement possible côté code.</p>
+                  <h3 data-i18n="ra.dec2.h3">Plans tarifaires inscrits dans le schéma, pas dans le marketing</h3>
+                  <p data-i18n-html="ra.dec2.p1">Tentation classique&nbsp;: définir les offres (Starter&nbsp;/&nbsp;Premium&nbsp;/&nbsp;Franchise) comme un attribut «&nbsp;marketing&nbsp;» et laisser l'application gérer les plafonds. Risque&nbsp;: utilisateurs Starter qui contournent les limites via API, dérogations custom par enseigne, monétisation érodée.</p>
+                  <p data-i18n-html="ra.dec2.p2">J'ai inscrit les plafonds d'établissements (1&nbsp;/&nbsp;3&nbsp;/&nbsp;sur mesure) dans les modèles partagés <em>et</em> dans le schéma PostgreSQL. <strong>Coût</strong>&nbsp;: couplage fort offre&nbsp;/&nbsp;data, évolution tarifaire = migration. <strong>Bénéfice</strong>&nbsp;: monétisation par construction, pas de contournement possible côté code.</p>
                 </li>
                 <li>
                   <span class="case-decisions__index">03</span>
-                  <h3>Locale française stricte, pas d'i18n générique</h3>
-                  <p>Réflexe SaaS moderne&nbsp;: i18n dès le départ, anglais par défaut, français en seconde langue. Coût caché&nbsp;: un produit qui parle «&nbsp;anglais traduit&nbsp;», vocabulaire métier qui sonne faux pour les restaurateurs français.</p>
-                  <p>J'ai assumé un positionnement France&nbsp;/&nbsp;francophonie strict&nbsp;: enums métier en français dans le schéma base, formats EUR et locale fr_FR, vocabulaire opérationnel propre au métier (canaux, hashtags #shift&nbsp;/&nbsp;#affectation&nbsp;/&nbsp;#stock). <strong>Coût</strong>&nbsp;: pivot international = refonte data. <strong>Bénéfice</strong>&nbsp;: un produit qui parle juste à sa cible — pas de «&nbsp;traduit de l'américain&nbsp;».</p>
+                  <h3 data-i18n="ra.dec3.h3">Locale française stricte, pas d'i18n générique</h3>
+                  <p data-i18n-html="ra.dec3.p1">Réflexe SaaS moderne&nbsp;: i18n dès le départ, anglais par défaut, français en seconde langue. Coût caché&nbsp;: un produit qui parle «&nbsp;anglais traduit&nbsp;», vocabulaire métier qui sonne faux pour les restaurateurs français.</p>
+                  <p data-i18n-html="ra.dec3.p2">J'ai assumé un positionnement France&nbsp;/&nbsp;francophonie strict&nbsp;: enums métier en français dans le schéma base, formats EUR et locale fr_FR, vocabulaire opérationnel propre au métier (canaux, hashtags #shift&nbsp;/&nbsp;#affectation&nbsp;/&nbsp;#stock). <strong>Coût</strong>&nbsp;: pivot international = refonte data. <strong>Bénéfice</strong>&nbsp;: un produit qui parle juste à sa cible — pas de «&nbsp;traduit de l'américain&nbsp;».</p>
                 </li>
               </ol>
             </section>
 
             <section class="case-detail__section" aria-labelledby="detail-impact">
-              <p class="case-detail__kicker">Impact</p>
-              <h2 id="detail-impact">Ce que ça a livré</h2>
+              <p class="case-detail__kicker" data-i18n="ra.imp.kicker">Impact</p>
+              <h2 id="detail-impact" data-i18n="ra.imp.h2">Ce que ça a livré</h2>
               <ul class="case-detail__impact" role="list">
-                <li>Plateforme multi-canal livrée&nbsp;: app iOS SwiftUI + panneau web admin + API Node&nbsp;/&nbsp;TypeScript + PostgreSQL via Supabase.</li>
-                <li>Modèles, config et événements partagés en TypeScript — zéro désync entre canaux, refactos propagées par construction.</li>
-                <li>Plans tarifaires (Starter&nbsp;/&nbsp;Premium&nbsp;/&nbsp;Franchise) ancrés dans le schéma — monétisation sans contournement.</li>
-                <li>Chat temps réel par établissement (WebSocket authentifié, diffusion par établissement, RLS Supabase) — confiance et isolation par construction.</li>
-                <li>Design system mobile documenté Figma → SwiftUI, police custom «&nbsp;Jaguar Exuberant&nbsp;», safe area et Dynamic Island pris en compte.</li>
-                <li>Locale FR native — enums métier, formats EUR&nbsp;/&nbsp;fr_FR, vocabulaire opérationnel propre à la restauration.</li>
+                <li data-i18n="ra.imp.li1">Plateforme multi-canal livrée&nbsp;: app iOS SwiftUI + panneau web admin + API Node&nbsp;/&nbsp;TypeScript + PostgreSQL via Supabase.</li>
+                <li data-i18n="ra.imp.li2">Modèles, config et événements partagés en TypeScript — zéro désync entre canaux, refactos propagées par construction.</li>
+                <li data-i18n="ra.imp.li3">Plans tarifaires (Starter&nbsp;/&nbsp;Premium&nbsp;/&nbsp;Franchise) ancrés dans le schéma — monétisation sans contournement.</li>
+                <li data-i18n="ra.imp.li4">Chat temps réel par établissement (WebSocket authentifié, diffusion par établissement, RLS Supabase) — confiance et isolation par construction.</li>
+                <li data-i18n-html="ra.imp.li5">Design system mobile documenté Figma → SwiftUI, police custom «&nbsp;Jaguar Exuberant&nbsp;», safe area et Dynamic Island pris en compte.</li>
+                <li data-i18n="ra.imp.li6">Locale FR native — enums métier, formats EUR&nbsp;/&nbsp;fr_FR, vocabulaire opérationnel propre à la restauration.</li>
               </ul>
             </section>
 
@@ -199,6 +204,7 @@
     </div>
   </article>
 
-  <script src="../../assets/js/main.js?v=45"></script>
+  <script src="../../assets/js/i18n.js?v=7"></script>
+  <script src="../../assets/js/main.js?v=52"></script>
 </body>
 </html>

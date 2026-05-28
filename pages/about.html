@@ -2,6 +2,9 @@
 <html lang="fr-FR">
 <head>
   <meta charset="utf-8" />
+  <script>(function(){try{var l=localStorage.getItem("jvm-lang");if(l&&/^(fr|en|es)$/.test(l)){document.documentElement.lang=l==="fr"?"fr-FR":l;document.documentElement.setAttribute("data-lang",l);}}catch(e){}})();</script>
+  <script>(function(){var h=document.documentElement;var ok=function(){h.classList.add("motion-ok");};if(document.prerendering){document.addEventListener("prerenderingchange",ok,{once:true});}else if(document.visibilityState==="visible"){ok();}else{document.addEventListener("visibilitychange",function f(){if(document.visibilityState==="visible"){document.removeEventListener("visibilitychange",f);ok();}});}})();</script>
+  <noscript><style>.enter > *,.enter .list > .list-item,.enter .header-row .brand,.case-study .case-bar,.case-study .case-meta,.case-study .case-thumbs,.case-study .case-stage,.site-footer{opacity:1!important;filter:none!important;transform:none!important;animation:none!important}</style></noscript>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="light dark" />
   <style>html,body{background-color:#fafafa}@media (prefers-color-scheme:dark){html,body{background-color:#0b0b0c}}</style>
@@ -11,6 +14,8 @@
   <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
   <link rel="canonical" href="https://jaime-vm.com/pages/about.html" />
   <link rel="alternate" hreflang="fr-FR" href="https://jaime-vm.com/pages/about.html" />
+  <link rel="alternate" hreflang="en" href="https://jaime-vm.com/pages/about.html?lang=en" />
+  <link rel="alternate" hreflang="es" href="https://jaime-vm.com/pages/about.html?lang=es" />
   <link rel="alternate" hreflang="x-default" href="https://jaime-vm.com/pages/about.html" />
   <meta name="theme-color" content="#fafafa" media="(prefers-color-scheme: light)" />
   <meta name="theme-color" content="#0b0b0c" media="(prefers-color-scheme: dark)" />
@@ -125,36 +130,36 @@
   </script>
 
   <link rel="stylesheet" href="../assets/css/reset.css" />
-  <link rel="stylesheet" href="../assets/css/styles.css?v=62" />
+  <link rel="stylesheet" href="../assets/css/styles.css?v=80" />
 </head>
 <body>
-  <a class="skip-link" href="#main">Aller au contenu</a>
+  <a class="skip-link" href="#main" data-i18n="skip">Aller au contenu</a>
   <main class="page" id="main">
     <div class="page-with-preview">
     <div class="col enter">
       <div class="header-row">
-        <a class="brand" href="../index.html" aria-label="Accueil">
+        <a class="brand" href="../index.html" aria-label="Accueil" data-i18n-attr="aria-label:brand.home">
           <img src="../assets/img/avatar.jpg" alt="Jaime Villegas Maira" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'JVM'}))" />
         </a>
         <div class="intro">
-          <h1 class="page-title">À propos</h1>
+          <h1 class="page-title" data-i18n="about.title">À propos</h1>
         </div>
       </div>
 
-      <nav class="site-nav" aria-label="Navigation principale">
-        <a href="../index.html">Accueil</a>
-        <a href="about.html">À propos</a>
-        <a href="contact.html">Contact</a>
-        <a href="work.html">Projets</a>
+      <nav class="site-nav" aria-label="Navigation principale" data-i18n-attr="aria-label:nav.aria">
+        <a href="../index.html" data-i18n="nav.home">Accueil</a>
+        <a href="about.html" data-i18n="nav.about">À propos</a>
+        <a href="contact.html" data-i18n="nav.contact">Contact</a>
+        <a href="work.html" data-i18n="nav.work">Projets</a>
       </nav>
 
       <div class="prose">
-        <p>Product Leader à la croisée du <strong>design</strong> et du <strong>management</strong>, 12+ ans d'expérience*. Aujourd'hui <strong>Lead Product Designer &amp; Product Manager chez TNS (The Next Stories)</strong>, éditeur d'Autoya — SaaS automotive B2B/B2C.</p>
-        <p>Je pilote la vision, le design system et la delivery avec une équipe de 6 personnes (back, front, mobile, design). Application publiée sur App Store et Google Play en décembre 2025.</p>
-        <p>J'aime l'<strong>architecture-first</strong> : Cursor Rules, PRD formalisés, Definition of Done. Je m'intéresse aussi au <strong>motion purposeful</strong> (GSAP, easing physique) et à l'intégration de workflows IA dans la recherche utilisateur et la delivery.</p>
-        <p>Avant TNS, j'ai été la première embauche design de <strong>Merim Groupe</strong>, designer en agence chez <strong>The Design Crew</strong> (Pass Culture, Vendredi, Heetch), et freelance sur <strong>Eximion</strong>.</p>
-        <p>Côté communauté, je suis bénévole chez <strong>FrenchProduit</strong> (animation meetups, speaker FLUPA Nantes 2025).</p>
-        <p>Langues : espagnol (maternelle), français (C2), anglais (C1).</p>
+        <p data-i18n-html="about.p1">Product Leader à la croisée du <strong>design</strong> et du <strong>management</strong>, 12+ ans d'expérience*. Aujourd'hui <strong>Lead Product Designer &amp; Product Manager chez TNS (The Next Stories)</strong>, éditeur d'Autoya — SaaS automotive B2B/B2C.</p>
+        <p data-i18n-html="about.p2">Je pilote la vision, le design system et la delivery avec une équipe de 6 personnes (back, front, mobile, design). Application publiée sur App Store et Google Play en décembre 2025.</p>
+        <p data-i18n-html="about.p3">J'aime l'<strong>architecture-first</strong> : Cursor Rules, PRD formalisés, Definition of Done. Je m'intéresse aussi au <strong>motion purposeful</strong> (GSAP, easing physique) et à l'intégration de workflows IA dans la recherche utilisateur et la delivery.</p>
+        <p data-i18n-html="about.p4">Avant TNS, j'ai été la première embauche design de <strong>Merim Groupe</strong>, designer en agence chez <strong>The Design Crew</strong> (Pass Culture, Vendredi, Heetch), et freelance sur <strong>Eximion</strong>.</p>
+        <p data-i18n-html="about.p5">Côté communauté, je suis bénévole chez <strong>FrenchProduit</strong> (animation meetups, speaker FLUPA Nantes 2025).</p>
+        <p data-i18n-html="about.p6">Langues : espagnol (maternelle), français (C2), anglais (C1).</p>
       </div>
 
     </div>
@@ -162,6 +167,7 @@
     </div>
   </main>
 
-  <script src="../assets/js/main.js?v=45"></script>
+  <script src="../assets/js/i18n.js?v=7"></script>
+  <script src="../assets/js/main.js?v=52"></script>
 </body>
 </html>

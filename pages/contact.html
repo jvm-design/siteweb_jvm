@@ -2,6 +2,9 @@
 <html lang="fr-FR">
 <head>
   <meta charset="utf-8" />
+  <script>(function(){try{var l=localStorage.getItem("jvm-lang");if(l&&/^(fr|en|es)$/.test(l)){document.documentElement.lang=l==="fr"?"fr-FR":l;document.documentElement.setAttribute("data-lang",l);}}catch(e){}})();</script>
+  <script>(function(){var h=document.documentElement;var ok=function(){h.classList.add("motion-ok");};if(document.prerendering){document.addEventListener("prerenderingchange",ok,{once:true});}else if(document.visibilityState==="visible"){ok();}else{document.addEventListener("visibilitychange",function f(){if(document.visibilityState==="visible"){document.removeEventListener("visibilitychange",f);ok();}});}})();</script>
+  <noscript><style>.enter > *,.enter .list > .list-item,.enter .header-row .brand,.case-study .case-bar,.case-study .case-meta,.case-study .case-thumbs,.case-study .case-stage,.site-footer{opacity:1!important;filter:none!important;transform:none!important;animation:none!important}</style></noscript>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="light dark" />
   <style>html,body{background-color:#fafafa}@media (prefers-color-scheme:dark){html,body{background-color:#0b0b0c}}</style>
@@ -11,6 +14,8 @@
   <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
   <link rel="canonical" href="https://jaime-vm.com/pages/contact.html" />
   <link rel="alternate" hreflang="fr-FR" href="https://jaime-vm.com/pages/contact.html" />
+  <link rel="alternate" hreflang="en" href="https://jaime-vm.com/pages/contact.html?lang=en" />
+  <link rel="alternate" hreflang="es" href="https://jaime-vm.com/pages/contact.html?lang=es" />
   <link rel="alternate" hreflang="x-default" href="https://jaime-vm.com/pages/contact.html" />
   <meta name="theme-color" content="#fafafa" media="(prefers-color-scheme: light)" />
   <meta name="theme-color" content="#0b0b0c" media="(prefers-color-scheme: dark)" />
@@ -53,41 +58,41 @@
   </script>
 
   <link rel="stylesheet" href="../assets/css/reset.css" />
-  <link rel="stylesheet" href="../assets/css/styles.css?v=62" />
+  <link rel="stylesheet" href="../assets/css/styles.css?v=80" />
 </head>
 <body>
-  <a class="skip-link" href="#main">Aller au contenu</a>
+  <a class="skip-link" href="#main" data-i18n="skip">Aller au contenu</a>
   <main class="page" id="main">
     <div class="page-with-preview">
     <div class="col enter">
       <div class="header-row">
-        <a class="brand" href="../index.html" aria-label="Accueil">
+        <a class="brand" href="../index.html" aria-label="Accueil" data-i18n-attr="aria-label:brand.home">
           <img src="../assets/img/avatar.jpg" alt="Jaime Villegas Maira" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'JVM'}))" />
         </a>
         <div class="intro">
-          <h1 class="page-title">Contact</h1>
+          <h1 class="page-title" data-i18n="contact.title">Contact</h1>
         </div>
       </div>
 
-      <nav class="site-nav" aria-label="Navigation principale">
-        <a href="../index.html">Accueil</a>
-        <a href="about.html">À propos</a>
-        <a href="contact.html">Contact</a>
-        <a href="work.html">Projets</a>
+      <nav class="site-nav" aria-label="Navigation principale" data-i18n-attr="aria-label:nav.aria">
+        <a href="../index.html" data-i18n="nav.home">Accueil</a>
+        <a href="about.html" data-i18n="nav.about">À propos</a>
+        <a href="contact.html" data-i18n="nav.contact">Contact</a>
+        <a href="work.html" data-i18n="nav.work">Projets</a>
       </nav>
 
       <div class="prose">
-        <p>Un message, une idée, une collaboration — écris-moi.</p>
+        <p data-i18n="contact.lead">Un message, une idée, une collaboration — écris-moi.</p>
         <address itemscope itemtype="https://schema.org/Person">
           <meta itemprop="name" content="Jaime Villegas Maira" />
           <meta itemprop="jobTitle" content="Lead Product Designer & Product Manager" />
           <meta itemprop="worksFor" content="TNS (The Next Stories)" />
           <p>Email — <a itemprop="email" href="mailto:jaime.vile@gmail.com">jaime.vile@gmail.com</a></p>
-          <p>Téléphone — <a itemprop="telephone" href="tel:+33652057239">+33 6 52 05 72 39</a></p>
-          <p itemprop="address" itemscope itemtype="https://schema.org/PostalAddress">Localisation — <span itemprop="addressLocality">Nantes</span>, <span itemprop="addressCountry">France</span></p>
+          <p data-i18n-html="contact.phone">Téléphone — <a itemprop="telephone" href="tel:+33652057239">+33 6 52 05 72 39</a></p>
+          <p itemprop="address" itemscope itemtype="https://schema.org/PostalAddress" data-i18n-html="contact.location">Localisation — <span itemprop="addressLocality">Nantes</span>, <span itemprop="addressCountry">France</span></p>
           <p>LinkedIn — <a itemprop="sameAs" href="https://www.linkedin.com/in/jaimevillegasmaira/" target="_blank" rel="noopener me">jaimevillegasmaira</a></p>
           <p>GitHub — <a itemprop="sameAs" href="https://github.com/jvm-design" target="_blank" rel="noopener me">jvm-design</a></p>
-          <p>Behance — <a itemprop="sameAs" href="https://www.behance.net/jvillegasmaira" target="_blank" rel="noopener me">jvillegasmaira</a> <span class="muted-inline">(archives, pas à jour)</span></p>
+          <p>Behance — <a itemprop="sameAs" href="https://www.behance.net/jvillegasmaira" target="_blank" rel="noopener me">jvillegasmaira</a> <span class="muted-inline" data-i18n="contact.behance.note">(archives, pas à jour)</span></p>
         </address>
       </div>
 
@@ -96,6 +101,7 @@
     </div>
   </main>
 
-  <script src="../assets/js/main.js?v=45"></script>
+  <script src="../assets/js/i18n.js?v=7"></script>
+  <script src="../assets/js/main.js?v=52"></script>
 </body>
 </html>

@@ -14,3 +14,6 @@ npm-debug.log*
 # Logs / temp
 *.log
 .tmp/
+
+# Local Claude Code config (preview launch.json etc.)
+.claude/

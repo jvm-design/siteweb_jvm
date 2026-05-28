@@ -2,7 +2,14 @@
    Plus de cross-doc View Transitions (cf. commit 013611f historique).
    Le motion entre pages est désormais identique partout : rise + fade
    .enter en CSS pur, joué au chargement de chaque page. Pas de logique
-   de direction, pas d'orchestration VT, pas de divergence cross-browser. */
+   de direction, pas d'orchestration VT, pas de divergence cross-browser.
+
+   Le timing du déclenchement (prérender Arc, onglet caché, etc.) est
+   géré en amont par le inline script `motion-ok` du <head> — il pose
+   html.motion-ok dès que le document est réellement visible, ce qui
+   débloque côté CSS l'animation enter / brand-hold / footer-settle.
+   Ici on se contente d'attacher la classe .enter aux containers qui
+   en ont besoin (case-study body + tout élément [data-enter]). */
 (() => {
   const enterContainer = document.querySelector('[data-enter]');
   if (enterContainer) enterContainer.classList.add('enter');
@@ -1605,64 +1612,64 @@ const lockEnsureModal = () => {
 <div class="lock-modal" hidden role="dialog" aria-modal="true" aria-labelledby="lock-title">
   <div class="lock-modal__backdrop" data-lock-close></div>
   <div class="lock-modal__panel" data-lock-view="request">
-    <button class="lock-modal__close" type="button" data-lock-close aria-label="Fermer">
+    <button class="lock-modal__close" type="button" data-lock-close aria-label="Fermer" data-i18n-attr="aria-label:lock.close">
       <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M1 1 L11 11 M11 1 L1 11" stroke="currentColor" stroke-width="1" stroke-linecap="round" fill="none"/></svg>
     </button>
 
     <section data-lock-pane="request">
-      <h2 class="lock-modal__title" id="lock-title">Demander la clé</h2>
-      <p class="lock-modal__lede">Sous accord de confidentialité. Précisez votre demande, je vous transmets la clé à l'email indiqué.</p>
+      <h2 class="lock-modal__title" id="lock-title" data-i18n="lock.request.title">Demander la clé</h2>
+      <p class="lock-modal__lede" data-i18n="lock.request.lede">Sous accord de confidentialité. Précisez votre demande, je vous transmets la clé à l'email indiqué.</p>
       <div class="lock-modal__shortcut">
-        <button type="button" class="lock-link" data-lock-switch="key">Vous avez déjà une clé →</button>
+        <button type="button" class="lock-link" data-lock-switch="key" data-i18n="lock.request.haveKey">Vous avez déjà une clé →</button>
       </div>
       <form class="lock-form" data-lock-form="request" novalidate>
         <label class="lock-field">
-          <span class="lock-field__label">Email</span>
-          <input type="email" name="email" required autocomplete="email" placeholder="vous@exemple.com" />
+          <span class="lock-field__label" data-i18n="lock.field.email">Email</span>
+          <input type="email" name="email" required autocomplete="email" placeholder="vous@exemple.com" data-i18n-attr="placeholder:lock.field.email.ph" />
         </label>
         <label class="lock-field">
-          <span class="lock-field__label">Téléphone</span>
-          <input type="tel" name="phone" required pattern="0[67][\\s.\\-]?([0-9][\\s.\\-]?){8}" placeholder="06 12 34 56 78" />
+          <span class="lock-field__label" data-i18n="lock.field.phone">Téléphone</span>
+          <input type="tel" name="phone" required pattern="0[67][\\s.\\-]?([0-9][\\s.\\-]?){8}" placeholder="06 12 34 56 78" data-i18n-attr="placeholder:lock.field.phone.ph" />
         </label>
         <label class="lock-field">
-          <span class="lock-field__label">Demande</span>
-          <textarea name="why" rows="4" required placeholder="Qui vous êtes, et ce que vous proposez."></textarea>
+          <span class="lock-field__label" data-i18n="lock.field.message">Demande</span>
+          <textarea name="why" rows="4" required placeholder="Qui vous êtes, et ce que vous proposez." data-i18n-attr="placeholder:lock.field.message.ph"></textarea>
         </label>
         <label class="lock-field lock-field--check">
           <input type="checkbox" name="consent" required />
-          <span>J'accepte d'être recontacté·e par téléphone à propos de cette demande. <em class="lock-required" aria-hidden="true">*</em></span>
+          <span data-i18n-html="lock.consent">J'accepte d'être recontacté·e par téléphone à propos de cette demande. <em class="lock-required" aria-hidden="true">*</em></span>
         </label>
         <div class="lock-field lock-field--hp" aria-hidden="true">
           <label>Ne rien remplir<input type="text" name="hp" tabindex="-1" autocomplete="off" /></label>
         </div>
         <div class="lock-form__actions">
-          <button type="submit" class="lock-btn" data-lock-submit>Envoyer →</button>
+          <button type="submit" class="lock-btn" data-lock-submit data-i18n="lock.request.submit">Envoyer →</button>
         </div>
       </form>
     </section>
 
     <section data-lock-pane="thanks" hidden>
-      <h2 class="lock-modal__title">Demande envoyée</h2>
-      <p class="lock-modal__lede">Merci. Je reviens vers vous rapidement avec la clé d'accès, à l'adresse indiquée.</p>
+      <h2 class="lock-modal__title" data-i18n="lock.thanks.title">Demande envoyée</h2>
+      <p class="lock-modal__lede" data-i18n="lock.thanks.lede">Merci. Je reviens vers vous rapidement avec la clé d'accès, à l'adresse indiquée.</p>
       <div class="lock-form__actions">
-        <button type="button" class="lock-btn" data-lock-close>Fermer</button>
+        <button type="button" class="lock-btn" data-lock-close data-i18n="lock.thanks.close">Fermer</button>
       </div>
     </section>
 
     <section data-lock-pane="key" hidden>
-      <h2 class="lock-modal__title">Saisir la clé</h2>
-      <p class="lock-modal__lede">La clé déverrouille les cas d'étude protégés en une fois.</p>
+      <h2 class="lock-modal__title" data-i18n="lock.key.title">Saisir la clé</h2>
+      <p class="lock-modal__lede" data-i18n="lock.key.lede">La clé déverrouille les cas d'étude protégés en une fois.</p>
       <div class="lock-modal__shortcut">
-        <button type="button" class="lock-link" data-lock-switch="request">Pas encore de clé · Demander →</button>
+        <button type="button" class="lock-link" data-lock-switch="request" data-i18n="lock.key.needKey">Pas encore de clé · Demander →</button>
       </div>
       <form class="lock-form" data-lock-form="key" novalidate>
         <label class="lock-field">
-          <span class="lock-field__label">Clé</span>
+          <span class="lock-field__label" data-i18n="lock.field.key">Clé</span>
           <input type="password" name="key" required autocomplete="off" autocapitalize="off" spellcheck="false" />
         </label>
-        <p class="lock-error" data-lock-error hidden>Clé non reconnue.</p>
+        <p class="lock-error" data-lock-error hidden data-i18n="lock.key.error">Clé non reconnue.</p>
         <div class="lock-form__actions">
-          <button type="submit" class="lock-btn">Déverrouiller →</button>
+          <button type="submit" class="lock-btn" data-i18n="lock.key.submit">Déverrouiller →</button>
         </div>
       </form>
     </section>
@@ -1750,6 +1757,10 @@ const lockEnsureModal = () => {
     if (e.key === "Escape" && lockModalEl && !lockModalEl.hidden) lockCloseModal();
   });
 
+  // Translate AFTER all event listeners are bound — defensive order so any
+  // sync DOM work in applyEl cannot race with the binding step.
+  if (window.JVMi18n && window.JVMi18n.translateTree) window.JVMi18n.translateTree(lockModalEl);
+
   return lockModalEl;
 };
 
@@ -1809,8 +1820,22 @@ const lockCloseModal = () => {
   if (!lockModalEl || lockModalEl.hidden) return;
   lockModalEl.removeAttribute("data-open");
   document.body.classList.remove("no-scroll");
-  setTimeout(() => { if (lockModalEl) lockModalEl.hidden = true; }, 320);
+  // 560ms = durée de l'exit CSS asymétrique (ease-in, décisif) + 40ms buffer.
+  // L'entry de 840ms (ease-out, cinématique) est gérée par les transitions sur
+  // [data-open], aucun setTimeout côté open.
+  setTimeout(() => { if (lockModalEl) lockModalEl.hidden = true; }, 600);
 };
+
+// Bulletproof close delegation : ANY click that lands inside a
+// [data-lock-close] element (incluant le SVG/path enfant du × button) ferme la
+// modale. Indépendant des listeners attachés par lockEnsureModal — survit à
+// toute re-traduction, toute animation, tout reordering interne.
+document.addEventListener("click", (e) => {
+  const t = e.target;
+  if (t && t.closest && t.closest("[data-lock-close]")) {
+    if (lockModalEl && !lockModalEl.hidden) lockCloseModal();
+  }
+});
 
 const lockApplyToGrid = (lockedSet) => {
   document.querySelectorAll(".list.craft .list-item[id]").forEach((li) => {
@@ -1841,15 +1866,15 @@ const lockApplyToCaseStudy = (lockedSet) => {
   const panel = document.createElement("aside");
   panel.className = "lock-invite";
   const keyEntryHtml = LOCK_KEY_ENTRY_ENABLED
-    ? `<button type="button" class="lock-link" data-lock-open="key">J'ai déjà une clé</button>`
+    ? `<button type="button" class="lock-link" data-lock-open="key" data-i18n="lock.invite.haveKey">J'ai déjà une clé</button>`
     : "";
   panel.innerHTML = `
     <div class="lock-invite__inner">
-      <p class="lock-invite__eyebrow">Projet sur invitation</p>
-      <h2 class="lock-invite__title">Sous accord de confidentialité</h2>
-      <p class="lock-invite__lede">Le détail de ce projet n'est partagé que sur demande. Précisez votre intention et je vous transmets la clé.</p>
+      <p class="lock-invite__eyebrow" data-i18n="lock.invite.eyebrow">Projet sur invitation</p>
+      <h2 class="lock-invite__title" data-i18n="lock.invite.title">Sous accord de confidentialité</h2>
+      <p class="lock-invite__lede" data-i18n="lock.invite.lede">Le détail de ce projet n'est partagé que sur demande. Précisez votre intention et je vous transmets la clé.</p>
       <div class="lock-invite__actions">
-        <button type="button" class="lock-btn" data-lock-open="request">Demander la clé →</button>
+        <button type="button" class="lock-btn" data-lock-open="request" data-i18n="lock.invite.requestBtn">Demander la clé →</button>
         ${keyEntryHtml}
       </div>
     </div>`;
@@ -1857,6 +1882,7 @@ const lockApplyToCaseStudy = (lockedSet) => {
   panel.querySelectorAll("[data-lock-open]").forEach((b) => {
     b.addEventListener("click", () => lockOpenModal(b.getAttribute("data-lock-open")));
   });
+  if (window.JVMi18n && window.JVMi18n.translateTree) window.JVMi18n.translateTree(panel);
 };
 
 // Persistent "Accès" entry point in the site nav so a key-holder can re-enter
@@ -1872,11 +1898,13 @@ const lockInjectKeyEntryLink = () => {
   a.setAttribute("data-lock-entry", "");
   a.className = "site-nav__access";
   a.textContent = "Accès";
+  a.setAttribute("data-i18n", "nav.access");
   a.addEventListener("click", (e) => {
     e.preventDefault();
     lockOpenModal("key");
   });
   nav.appendChild(a);
+  if (window.JVMi18n && window.JVMi18n.translateEl) window.JVMi18n.translateEl(a);
 };
 
 const lockRemoveAllLocks = () => {

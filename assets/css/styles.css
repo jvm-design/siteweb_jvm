@@ -318,6 +318,66 @@ body {
 }
 .site-nav__access:hover { color: var(--text) !important; }
 
+/* ——— Language switcher (FR/EN/ES) ——— */
+.lang-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+}
+.lang-switch__btn {
+  appearance: none;
+  -webkit-appearance: none;
+  background: none;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  font: inherit;
+  line-height: 1;
+  letter-spacing: inherit;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color var(--d-quick) var(--ease);
+}
+.lang-switch__btn:hover { color: var(--muted-2); }
+.lang-switch__btn.is-active { color: var(--text); cursor: default; }
+.lang-switch__btn:focus-visible {
+  outline: var(--m-hairline) solid var(--text);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+.lang-switch__sep {
+  color: var(--rule);
+  user-select: none;
+  pointer-events: none;
+}
+.lang-switch--bar {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: center;
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+}
+/* Pages principales (accueil, à propos, contact, projets) : le sélecteur vit
+   dans le bandeau d'en-tête, texte nu, aligné au bord droit de la colonne de
+   contenu. position:absolute (pas fixed) → il défile avec la page comme le
+   reste du masthead, aucun chrome flottant. Appendu au <body> côté JS pour
+   échapper au conteneur .enter transformé. */
+.lang-switch--pinned {
+  position: absolute;
+  top: 1.25rem;
+  right: max(var(--pad-x), calc(50% - var(--col) / 2));
+  z-index: 20;
+}
+@media (max-width: 640px) {
+  .lang-switch--pinned { top: 1rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lang-switch__btn { transition: none; }
+}
+
 /* ——— Project list ——— */
 .list {
   position: relative;
@@ -797,14 +857,18 @@ body.no-scroll { overflow: hidden; }
 }
 .case-study .case-next { display: none; }
 
-/* Top bar : back (left) + next project (right) — sticky, sits above the case grid */
+/* Top bar : back (gauche) · langue (centre, sur l'axe vrai) · next (droite).
+   Grille 1fr auto 1fr → les deux colonnes latérales sont égales, donc la
+   colonne auto du milieu est centrée sur l'axe de la barre quelle que soit la
+   longueur des libellés back/next. Symétrie classique, robuste. */
 .case-bar {
   position: sticky;
   top: 0;
   z-index: 30;
   display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-template-columns: 1fr auto 1fr;
   column-gap: var(--case-gutter);
+  align-items: center;
   max-width: var(--case-max);
   margin: 0 auto;
   padding: 0 var(--case-gutter);
@@ -813,13 +877,19 @@ body.no-scroll { overflow: hidden; }
   backdrop-filter: saturate(1.4) blur(12px);
   -webkit-backdrop-filter: saturate(1.4) blur(12px);
   border-bottom: 1px solid var(--rule);
-  align-items: center;
 }
+/* Chaque enfant direct est un flex centré (au lieu d'un inline-block aligné sur
+   la baseline, qui décalait le texte de ~2px) → les glyphes des trois éléments
+   tombent sur le même axe vertical. */
+.case-bar > * { display: flex; align-items: center; line-height: 1; }
 .case-bar__back {
-  grid-column: 1 / span 5;
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: start;
 }
 .case-bar__back a {
   display: inline-block;
+  line-height: 1;
   font-family: var(--font-mono);
   font-size: 0.6875rem;
   letter-spacing: 0.08em;
@@ -831,11 +901,14 @@ body.no-scroll { overflow: hidden; }
 .case-bar__back a:hover { color: var(--text); }
 
 .case-bar__next {
-  grid-column: 8 / span 5;
+  grid-column: 3;
+  grid-row: 1;
+  justify-self: end;
   text-align: right;
 }
 .case-bar__next a {
   display: inline-block;
+  line-height: 1;
   font-family: var(--font-mono);
   font-size: 0.6875rem;
   letter-spacing: 0.08em;
@@ -1597,9 +1670,14 @@ button.case-cta {
 /* Phone — 1-col, stage hidden, thumbs become the gallery (stacked vertically). */
 @media (max-width: 767px) {
   .case-study { --bar-h: 3rem; }
-  .case-bar { padding: 0 var(--case-gutter); }
-  .case-bar__back { grid-column: 1 / span 6; }
-  .case-bar__next { grid-column: 7 / span 6; }
+  .case-bar { padding: 0 var(--case-gutter); column-gap: 0.6rem; }
+  /* Garder les trois sur une seule ligne, centrés verticalement : on empêche
+     le retour à la ligne du libellé back et on resserre la typo. */
+  .case-bar__back a, .case-bar__next a, .lang-switch--bar { font-size: 0.625rem; letter-spacing: 0.03em; }
+  .case-bar__back a { white-space: nowrap; }
+  .lang-switch { gap: 0.3rem; }
+  .case-bar__back { grid-column: 1; }
+  .case-bar__next { grid-column: 3; }
   .case-bar__next-name { display: inline-block; max-width: 22ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
 
   /* Reset implicit grid placement so meta + thumbs stack vertically.
@@ -1628,8 +1706,8 @@ button.case-cta {
     overflow: hidden;
   }
   .case-bar { padding: 0 var(--case-gutter); }
-  .case-bar__back { grid-column: 1 / span 6; }
-  .case-bar__next { grid-column: 7 / span 6; }
+  .case-bar__back { grid-column: 1; }
+  .case-bar__next { grid-column: 3; }
   .case-bar__next-name { display: inline-block; max-width: 22ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
 
   .case-grid {
@@ -1706,11 +1784,14 @@ button.case-cta {
   inset: auto 0 0 0;
   z-index: 10;
   pointer-events: none;
+  opacity: 0; /* État initial — animation déclenchée par html.motion-ok */
+}
+html.motion-ok .site-footer {
   animation: footer-settle 0.5s var(--ease-out) 0.5s both;
 }
 @keyframes footer-settle { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
-  .site-footer { animation: none !important; }
+  .site-footer { animation: none !important; opacity: 1 !important; }
 }
 .site-footer-grid {
   width: 100%;
@@ -1777,11 +1858,22 @@ button.case-cta {
 .footer-links a:last-child:hover { opacity: 0.8; color: var(--accent); }
 
 
-/* ——— Entrance animation (stagger) ——— */
+/* ——— Entrance animation (stagger) ———
+   État initial (caché + flouté + translaté) appliqué *toujours* sur les
+   éléments d'entrée, pour qu'aucun frame ne paint en état final avant
+   que l'animation démarre. Le déclenchement de l'animation elle-même
+   est gaté sur html.motion-ok, classe posée par un inline <head> script
+   uniquement quand le document est *réellement* visible (pas pendant
+   un prérender Arc/Chromium ni dans un onglet en arrière-plan). Sans
+   ce gate, l'animation se jouait pendant la prérender et l'utilisateur
+   ne voyait rien à l'activation du tab. Un <noscript> fallback dans
+   chaque HTML rétablit l'état final si JS est désactivé. */
 .enter > * {
   opacity: 0;
   filter: blur(8px);
   transform: translateY(16px);
+}
+html.motion-ok .enter > * {
   animation: enter 0.7s var(--ease-out) forwards;
 }
 .enter > *:nth-child(1) { animation-delay: 0.05s; }
@@ -1795,6 +1887,8 @@ button.case-cta {
   opacity: 0;
   filter: blur(6px);
   transform: translateY(16px);
+}
+html.motion-ok .enter .list > .list-item {
   animation: enter 0.6s var(--ease-out) forwards;
 }
 .enter .list > .list-item:nth-of-type(1) { animation-delay: 0.45s; }
@@ -1817,6 +1911,8 @@ button.case-cta {
    vertical, tout en laissant l'opacité et le flou hérités s'appliquer. */
 .enter .header-row .brand {
   transform: translateY(-16px);
+}
+html.motion-ok .enter .header-row .brand {
   animation: brand-hold 0.7s var(--ease-out) 0.05s forwards;
 }
 @keyframes brand-hold {
@@ -1832,6 +1928,11 @@ button.case-cta {
   opacity: 0;
   filter: blur(8px);
   transform: translateY(16px);
+}
+html.motion-ok .case-study .case-bar,
+html.motion-ok .case-study .case-meta,
+html.motion-ok .case-study .case-thumbs,
+html.motion-ok .case-study .case-stage {
   animation: enter 0.7s var(--ease-out) forwards;
 }
 .case-study .case-bar    { animation-delay: 0.05s; }
@@ -1867,6 +1968,9 @@ button.case-cta {
   }
   .list-item a { min-height: 44px; }
   .brand { width: 2.75rem; height: 2.75rem; }
+
+  .site-nav { flex-wrap: wrap; row-gap: 0.25rem; }
+  .lang-switch__btn { min-height: 44px; padding-block: 0; }
 }
 
 /* ——— Mobile + tablet : header collant + scroll-driven shrink (iOS-style) ———
@@ -2096,8 +2200,16 @@ body:has(.lock-invite) .case-bar { z-index: 50; }
   padding: 1.5rem;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.28s var(--ease);
+  /* Transition asymétrique : départ rapide et décisif (ease-in 0,56s) —
+     l'arrivée (0,84s ease-out) est définie sur [data-open] ci-dessous.
+     ease-in en cubic littéral (le token --ease-in n'existe pas dans :root). */
+  transition: opacity 0.56s cubic-bezier(0.4, 0, 1, 1);
 }
+/* L'attribut hidden du HTML est normalement équivalent à display:none côté UA,
+   mais `.lock-modal { display: grid }` (plus spécifique) l'écrase. Sans cette
+   ligne, la modale reste visible même après lockCloseModal → l'utilisateur a
+   l'impression que le × ne fonctionne pas. */
+.lock-modal[hidden] { display: none; }
 .lock-modal[data-open] {
   opacity: 1;
   pointer-events: auto;
@@ -2122,9 +2234,26 @@ body:has(.lock-invite) .case-bar { z-index: 50; }
     0 30px 80px -20px rgba(0, 0, 0, 0.55),
     0 10px 30px -10px rgba(0, 0, 0, 0.35);
   transform: translateY(12px) scale(0.97);
-  transition: transform 0.32s var(--ease-out);
+  filter: blur(10px);
+  /* Transitions asymétriques : exit ease-in 0,56s (décisif) — entry ease-out
+     0,84s (cinématique) défini sur [data-open] juste en dessous.
+     ease-in en cubic littéral (pas de token --ease-in dans :root). */
+  transition:
+    transform 0.56s cubic-bezier(0.4, 0, 1, 1),
+    filter 0.56s cubic-bezier(0.4, 0, 1, 1);
 }
-.lock-modal[data-open] .lock-modal__panel { transform: translateY(0) scale(1); }
+.lock-modal[data-open] .lock-modal__panel {
+  transform: translateY(0) scale(1);
+  filter: blur(0);
+  /* Entry : même tempo et grammaire que le souffle de langue. */
+  transition:
+    transform 0.84s var(--ease-out),
+    filter 0.84s var(--ease-out);
+}
+.lock-modal[data-open] {
+  /* Entry opacity : aligné sur le souffle de langue. */
+  transition: opacity 0.84s var(--ease-out);
+}
 .lock-modal__close {
   position: absolute;
   top: 1rem;

@@ -2,6 +2,9 @@
 <html lang="fr-FR">
 <head>
   <meta charset="utf-8" />
+  <script>(function(){try{var l=localStorage.getItem("jvm-lang");if(l&&/^(fr|en|es)$/.test(l)){document.documentElement.lang=l==="fr"?"fr-FR":l;document.documentElement.setAttribute("data-lang",l);}}catch(e){}})();</script>
+  <script>(function(){var h=document.documentElement;var ok=function(){h.classList.add("motion-ok");};if(document.prerendering){document.addEventListener("prerenderingchange",ok,{once:true});}else if(document.visibilityState==="visible"){ok();}else{document.addEventListener("visibilitychange",function f(){if(document.visibilityState==="visible"){document.removeEventListener("visibilitychange",f);ok();}});}})();</script>
+  <noscript><style>.enter > *,.enter .list > .list-item,.enter .header-row .brand,.case-study .case-bar,.case-study .case-meta,.case-study .case-thumbs,.case-study .case-stage,.site-footer{opacity:1!important;filter:none!important;transform:none!important;animation:none!important}</style></noscript>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="light dark" />
   <style>html,body{background-color:#fafafa}@media (prefers-color-scheme:dark){html,body{background-color:#0b0b0c}}</style>
@@ -11,6 +14,8 @@
   <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
   <link rel="canonical" href="https://jaime-vm.com/pages/work.html" />
   <link rel="alternate" hreflang="fr-FR" href="https://jaime-vm.com/pages/work.html" />
+  <link rel="alternate" hreflang="en" href="https://jaime-vm.com/pages/work.html?lang=en" />
+  <link rel="alternate" hreflang="es" href="https://jaime-vm.com/pages/work.html?lang=es" />
   <link rel="alternate" hreflang="x-default" href="https://jaime-vm.com/pages/work.html" />
   <meta name="theme-color" content="#fafafa" media="(prefers-color-scheme: light)" />
   <meta name="theme-color" content="#0b0b0c" media="(prefers-color-scheme: dark)" />
@@ -72,36 +77,36 @@
   </script>
 
   <link rel="stylesheet" href="../assets/css/reset.css" />
-  <link rel="stylesheet" href="../assets/css/styles.css?v=62" />
+  <link rel="stylesheet" href="../assets/css/styles.css?v=80" />
 </head>
 <body>
-  <a class="skip-link" href="#main">Aller au contenu</a>
+  <a class="skip-link" href="#main" data-i18n="skip">Aller au contenu</a>
   <main class="page" id="main">
     <div class="page-with-preview">
     <div class="col enter">
       <div class="header-row">
-        <a class="brand" href="../index.html" aria-label="Accueil">
+        <a class="brand" href="../index.html" aria-label="Accueil" data-i18n-attr="aria-label:brand.home">
           <img src="../assets/img/avatar.jpg" alt="Jaime Villegas Maira" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'JVM'}))" />
         </a>
         <div class="intro">
-          <h1 class="page-title">Projets</h1>
+          <h1 class="page-title" data-i18n="work.title">Projets</h1>
         </div>
       </div>
 
-      <nav class="site-nav" aria-label="Navigation principale">
-        <a href="../index.html">Accueil</a>
-        <a href="about.html">À propos</a>
-        <a href="contact.html">Contact</a>
-        <a href="work.html">Projets</a>
+      <nav class="site-nav" aria-label="Navigation principale" data-i18n-attr="aria-label:nav.aria">
+        <a href="../index.html" data-i18n="nav.home">Accueil</a>
+        <a href="about.html" data-i18n="nav.about">À propos</a>
+        <a href="contact.html" data-i18n="nav.contact">Contact</a>
+        <a href="work.html" data-i18n="nav.work">Projets</a>
       </nav>
 
       <div class="work-filter" hidden>
         <h2 class="work-filter-label" aria-live="polite"></h2>
         <span class="work-filter-count" aria-hidden="true"></span>
-        <a class="work-filter-dismiss" href="work.html" aria-label="Voir tous les projets">Tous les projets →</a>
+        <a class="work-filter-dismiss" href="work.html" aria-label="Voir tous les projets" data-i18n="work.filter.all" data-i18n-attr="aria-label:work.filter.all.aria">Tous les projets →</a>
       </div>
 
-      <p class="work-empty" hidden>Aucun projet dans cette catégorie pour l'instant. <a href="work.html">Voir tous les projets</a>.</p>
+      <p class="work-empty" hidden data-i18n-html="work.empty">Aucun projet dans cette catégorie pour l'instant. <a href="work.html">Voir tous les projets</a>.</p>
 
       <ul class="list craft">
         <li class="list-item" data-exp="tns" id="autoya-mobile">
@@ -109,7 +114,7 @@
             <span class="thumb" data-media="pending" style="background: linear-gradient(135deg, #0c1e3b 0%, #0ea5e9 100%);" aria-hidden="true">Am</span>
             <span class="row-content">
               <span class="title">Autoya — Mobile</span>
-              <span class="meta">TNS (The Next Stories) · App iOS / Android</span>
+              <span class="meta" data-i18n="work.meta.autoya-mobile">TNS (The Next Stories) · App iOS / Android</span>
             </span>
             <span class="row-year">2025</span>
           </a>
@@ -119,7 +124,7 @@
             <span class="thumb" data-media="pending" style="background: linear-gradient(135deg, #1e293b 0%, #38bdf8 100%);" aria-hidden="true">Aw</span>
             <span class="row-content">
               <span class="title">Autoya — Webapp</span>
-              <span class="meta">TNS · Plateforme SaaS B2B</span>
+              <span class="meta" data-i18n="work.meta.autoya-webapp">TNS · Plateforme SaaS B2B</span>
             </span>
             <span class="row-year">2025</span>
           </a>
@@ -129,7 +134,7 @@
             <span class="thumb" data-media="pending" style="background: linear-gradient(135deg, #92400e 0%, #fbbf24 100%);" aria-hidden="true">DS</span>
             <span class="row-content">
               <span class="title">Design system</span>
-              <span class="meta">Merim Groupe · Tokens, composants, doc</span>
+              <span class="meta" data-i18n="work.meta.merim-design-system">Merim Groupe · Tokens, composants, doc</span>
             </span>
             <span class="row-year">2023–24</span>
           </a>
@@ -138,8 +143,8 @@
           <a href="work/merim-caisse.html">
             <span class="thumb" data-media="pending" style="background: linear-gradient(135deg, #7c2d12 0%, #f97316 100%);" aria-hidden="true">Cs</span>
             <span class="row-content">
-              <span class="title">Module Caisse</span>
-              <span class="meta">Merim Groupe · POS restauration rapide</span>
+              <span class="title" data-i18n="work.title.caisse">Module Caisse</span>
+              <span class="meta" data-i18n="work.meta.merim-caisse">Merim Groupe · POS restauration rapide</span>
             </span>
             <span class="row-year">2023–24</span>
           </a>
@@ -148,8 +153,8 @@
           <a href="work/merim-reporting.html">
             <span class="thumb" data-media="pending" style="background: linear-gradient(135deg, #9a3412 0%, #fb923c 100%);" aria-hidden="true">Rp</span>
             <span class="row-content">
-              <span class="title">Module Reporting</span>
-              <span class="meta">Merim Groupe · BI &amp; analytics restaurant</span>
+              <span class="title" data-i18n="work.title.reporting">Module Reporting</span>
+              <span class="meta" data-i18n="work.meta.merim-reporting">Merim Groupe · BI &amp; analytics restaurant</span>
             </span>
             <span class="row-year">2023–24</span>
           </a>
@@ -158,8 +163,8 @@
           <a href="work/merim-drive-thru.html">
             <span class="thumb" data-media="pending" style="background: linear-gradient(135deg, #78350f 0%, #fdba74 100%);" aria-hidden="true">Dt</span>
             <span class="row-content">
-              <span class="title">Module Drive-thru</span>
-              <span class="meta">Merim Groupe · Drive QSR</span>
+              <span class="title" data-i18n="work.title.drive">Module Drive-thru</span>
+              <span class="meta" data-i18n="work.meta.merim-drive-thru">Merim Groupe · Drive QSR</span>
             </span>
             <span class="row-year">2023–24</span>
           </a>
@@ -169,7 +174,7 @@
             <span class="thumb" data-media="pending" style="background: linear-gradient(135deg, #3b0764 0%, #10b981 100%);" aria-hidden="true">Ex</span>
             <span class="row-content">
               <span class="title">Eximion</span>
-              <span class="meta">Freelance · Plateforme d'investissement crypto</span>
+              <span class="meta" data-i18n="work.meta.eximion">Freelance · Plateforme d'investissement crypto</span>
             </span>
             <span class="row-year">2022–23</span>
           </a>
@@ -179,7 +184,7 @@
             <span class="thumb" data-media="pending" style="background: linear-gradient(135deg, #7f1d1d 0%, #f87171 100%);" aria-hidden="true">Ra</span>
             <span class="row-content">
               <span class="title">Restoapp</span>
-              <span class="meta">Freelance · App mobile iOS</span>
+              <span class="meta" data-i18n="work.meta.restoapp">Freelance · App mobile iOS</span>
             </span>
             <span class="row-year">2025</span>
           </a>
@@ -189,7 +194,7 @@
             <span class="thumb" data-media="pending" style="background: linear-gradient(135deg, #1f2937 0%, #fb7185 100%);" aria-hidden="true">Vd</span>
             <span class="row-content">
               <span class="title">Vendredi</span>
-              <span class="meta">The Design Crew · Engagement collaborateurs</span>
+              <span class="meta" data-i18n="work.meta.tdc-vendredi">The Design Crew · Engagement collaborateurs</span>
             </span>
             <span class="row-year">2023</span>
           </a>
@@ -199,7 +204,7 @@
             <span class="thumb" data-media="pending" style="background: linear-gradient(135deg, #18181b 0%, #fcd34d 100%);" aria-hidden="true">Hc</span>
             <span class="row-content">
               <span class="title">Heetch</span>
-              <span class="meta">The Design Crew · Mobilité urbaine</span>
+              <span class="meta" data-i18n="work.meta.tdc-heetch">The Design Crew · Mobilité urbaine</span>
             </span>
             <span class="row-year">2023</span>
           </a>
@@ -209,7 +214,7 @@
             <span class="thumb" data-media="pending" style="background: linear-gradient(135deg, #1e3a8a 0%, #ec4899 100%);" aria-hidden="true">Pc</span>
             <span class="row-content">
               <span class="title">Pass Culture</span>
-              <span class="meta">The Design Crew · Démocratisation culturelle</span>
+              <span class="meta" data-i18n="work.meta.tdc-passculture">The Design Crew · Démocratisation culturelle</span>
             </span>
             <span class="row-year">2023</span>
           </a>
@@ -219,7 +224,7 @@
             <span class="thumb" data-media="pending" style="background: linear-gradient(135deg, #5a2f10 0%, #d0db3a 100%);" aria-hidden="true">Tb</span>
             <span class="row-content">
               <span class="title">Tie Break</span>
-              <span class="meta">Side project · App iOS padel</span>
+              <span class="meta" data-i18n="work.meta.tie-break">Side project · App iOS padel</span>
             </span>
             <span class="row-year">2023</span>
           </a>
@@ -229,74 +234,74 @@
       <div class="projects">
         <article class="project" aria-labelledby="autoya-mobile-h">
           <h2 class="project-heading" id="autoya-mobile-h">Autoya — Mobile</h2>
-          <p class="project-meta">TNS (The Next Stories) · App iOS / Android · 2025</p>
-          <p class="project-stub">Un studio photo professionnel, dans la poche d'un vendeur. App Flutter publiée sur App Store et Google Play en décembre 2025. <a href="work/autoya-mobile.html">Lire l'étude de cas →</a></p>
+          <p class="project-meta" data-i18n="work.pmeta.autoya-mobile">TNS (The Next Stories) · App iOS / Android · 2025</p>
+          <p class="project-stub" data-i18n-html="work.stub.autoya-mobile">Un studio photo professionnel, dans la poche d'un vendeur. App Flutter publiée sur App Store et Google Play en décembre 2025. <a href="work/autoya-mobile.html">Lire l'étude de cas →</a></p>
         </article>
 
         <article class="project" aria-labelledby="autoya-webapp-h">
           <h2 class="project-heading" id="autoya-webapp-h">Autoya — Webapp</h2>
-          <p class="project-meta">TNS (The Next Stories) · Plateforme SaaS B2B · 2025</p>
-          <p class="project-stub">La production visuelle automobile, réinventée. Plateforme SaaS B2B pour concessionnaires : studio détourage IA, pipelines vidéo, DMS natif. React 19 / TypeScript, Feature-Sliced Design. <a href="work/autoya-webapp.html">Lire l'étude de cas →</a></p>
+          <p class="project-meta" data-i18n="work.pmeta.autoya-webapp">TNS (The Next Stories) · Plateforme SaaS B2B · 2025</p>
+          <p class="project-stub" data-i18n-html="work.stub.autoya-webapp">La production visuelle automobile, réinventée. Plateforme SaaS B2B pour concessionnaires : studio détourage IA, pipelines vidéo, DMS natif. React 19 / TypeScript, Feature-Sliced Design. <a href="work/autoya-webapp.html">Lire l'étude de cas →</a></p>
         </article>
 
         <article class="project" aria-labelledby="merim-design-system-h">
           <h2 class="project-heading" id="merim-design-system-h">Design system</h2>
-          <p class="project-meta">Merim Groupe · Tokens, composants, doc · 2023–24</p>
-          <p class="project-stub">Sortir un design system du Figma — et le faire adopter par l'équipe. Tokens, composants, gouvernance hebdomadaire ouverte aux devs et Product Managers. Première embauche design du groupe. <a href="work/merim-design-system.html">Lire l'étude de cas →</a></p>
+          <p class="project-meta" data-i18n="work.pmeta.merim-design-system">Merim Groupe · Tokens, composants, doc · 2023–24</p>
+          <p class="project-stub" data-i18n-html="work.stub.merim-design-system">Sortir un design system du Figma — et le faire adopter par l'équipe. Tokens, composants, gouvernance hebdomadaire ouverte aux devs et Product Managers. Première embauche design du groupe. <a href="work/merim-design-system.html">Lire l'étude de cas →</a></p>
         </article>
 
         <article class="project" aria-labelledby="merim-caisse-h">
-          <h2 class="project-heading" id="merim-caisse-h">Module Caisse</h2>
-          <p class="project-meta">Merim Groupe · POS restauration rapide · 2023–24</p>
-          <p class="project-stub">Une caisse plus rapide, sans réapprendre le geste. Refonte POS restauration rapide (QSR), gain de vitesse sans rupture des gestes acquis en restaurant. <a href="work/merim-caisse.html">Lire l'étude de cas →</a></p>
+          <h2 class="project-heading" id="merim-caisse-h" data-i18n="work.title.caisse">Module Caisse</h2>
+          <p class="project-meta" data-i18n="work.pmeta.merim-caisse">Merim Groupe · POS restauration rapide · 2023–24</p>
+          <p class="project-stub" data-i18n-html="work.stub.merim-caisse">Une caisse plus rapide, sans réapprendre le geste. Refonte POS restauration rapide (QSR), gain de vitesse sans rupture des gestes acquis en restaurant. <a href="work/merim-caisse.html">Lire l'étude de cas →</a></p>
         </article>
 
         <article class="project" aria-labelledby="merim-reporting-h">
-          <h2 class="project-heading" id="merim-reporting-h">Module Reporting</h2>
-          <p class="project-meta">Merim Groupe · BI &amp; analytics restaurant · 2023–24</p>
-          <p class="project-stub">Lire son restaurant en un coup d'œil. BI &amp; analytics opérationnels pour exploitants : ventes, performance, chiffre par site. <a href="work/merim-reporting.html">Lire l'étude de cas →</a></p>
+          <h2 class="project-heading" id="merim-reporting-h" data-i18n="work.title.reporting">Module Reporting</h2>
+          <p class="project-meta" data-i18n="work.pmeta.merim-reporting">Merim Groupe · BI &amp; analytics restaurant · 2023–24</p>
+          <p class="project-stub" data-i18n-html="work.stub.merim-reporting">Lire son restaurant en un coup d'œil. BI &amp; analytics opérationnels pour exploitants : ventes, performance, chiffre par site. <a href="work/merim-reporting.html">Lire l'étude de cas →</a></p>
         </article>
 
         <article class="project" aria-labelledby="merim-drive-thru-h">
-          <h2 class="project-heading" id="merim-drive-thru-h">Module Drive-thru</h2>
-          <p class="project-meta">Merim Groupe · Drive QSR · 2023–24</p>
-          <p class="project-stub">Voir la performance du drive avant qu'elle ne décroche. Monitoring temps réel drive QSR — détecter les décrochages avant qu'ils impactent le client. <a href="work/merim-drive-thru.html">Lire l'étude de cas →</a></p>
+          <h2 class="project-heading" id="merim-drive-thru-h" data-i18n="work.title.drive">Module Drive-thru</h2>
+          <p class="project-meta" data-i18n="work.pmeta.merim-drive-thru">Merim Groupe · Drive QSR · 2023–24</p>
+          <p class="project-stub" data-i18n-html="work.stub.merim-drive-thru">Voir la performance du drive avant qu'elle ne décroche. Monitoring temps réel drive QSR — détecter les décrochages avant qu'ils impactent le client. <a href="work/merim-drive-thru.html">Lire l'étude de cas →</a></p>
         </article>
 
         <article class="project" aria-labelledby="eximion-h">
           <h2 class="project-heading" id="eximion-h">Eximion</h2>
-          <p class="project-meta">Freelance · Plateforme d'investissement crypto · 2022–23</p>
-          <p class="project-stub">Designer l'MVP qu'un investisseur peut tester. Cadrage end-to-end d'un produit FinTech crypto, livré comme MVP testable par un investisseur réel. <a href="work/eximion.html">Lire l'étude de cas →</a></p>
+          <p class="project-meta" data-i18n="work.pmeta.eximion">Freelance · Plateforme d'investissement crypto · 2022–23</p>
+          <p class="project-stub" data-i18n-html="work.stub.eximion">Designer l'MVP qu'un investisseur peut tester. Cadrage end-to-end d'un produit FinTech crypto, livré comme MVP testable par un investisseur réel. <a href="work/eximion.html">Lire l'étude de cas →</a></p>
         </article>
 
         <article class="project" aria-labelledby="restoapp-h">
           <h2 class="project-heading" id="restoapp-h">RestoApp</h2>
-          <p class="project-meta">Freelance · App mobile iOS · 2025</p>
-          <p class="project-stub">Une plateforme qui parle restauration, pas SaaS générique. App mobile iOS food tech, langage UX adapté au métier plutôt qu'un SaaS générique. <a href="work/restoapp.html">Lire l'étude de cas →</a></p>
+          <p class="project-meta" data-i18n="work.pmeta.restoapp">Freelance · App mobile iOS · 2025</p>
+          <p class="project-stub" data-i18n-html="work.stub.restoapp">Une plateforme qui parle restauration, pas SaaS générique. App mobile iOS food tech, langage UX adapté au métier plutôt qu'un SaaS générique. <a href="work/restoapp.html">Lire l'étude de cas →</a></p>
         </article>
 
         <article class="project" aria-labelledby="tdc-vendredi-h">
           <h2 class="project-heading" id="tdc-vendredi-h">Vendredi</h2>
-          <p class="project-meta">The Design Crew · Engagement collaborateurs · 2023</p>
-          <p class="project-stub">Faire vivre la RSE au mois, pas dans un menu déroulant. Refonte UX de l'engagement RSE collaborateurs, en agence chez The Design Crew. <a href="work/tdc-vendredi.html">Lire l'étude de cas →</a></p>
+          <p class="project-meta" data-i18n="work.pmeta.tdc-vendredi">The Design Crew · Engagement collaborateurs · 2023</p>
+          <p class="project-stub" data-i18n-html="work.stub.tdc-vendredi">Faire vivre la RSE au mois, pas dans un menu déroulant. Refonte UX de l'engagement RSE collaborateurs, en agence chez The Design Crew. <a href="work/tdc-vendredi.html">Lire l'étude de cas →</a></p>
         </article>
 
         <article class="project" aria-labelledby="tdc-heetch-h">
           <h2 class="project-heading" id="tdc-heetch-h">Heetch</h2>
-          <p class="project-meta">The Design Crew · Mobilité urbaine · 2023</p>
-          <p class="project-stub">Faire entrer la trottinette dans Heetch, sans réécrire les habitudes. Intégration micro-mobilité dans l'app mobilité urbaine, en agence chez The Design Crew. <a href="work/tdc-heetch.html">Lire l'étude de cas →</a></p>
+          <p class="project-meta" data-i18n="work.pmeta.tdc-heetch">The Design Crew · Mobilité urbaine · 2023</p>
+          <p class="project-stub" data-i18n-html="work.stub.tdc-heetch">Faire entrer la trottinette dans Heetch, sans réécrire les habitudes. Intégration micro-mobilité dans l'app mobilité urbaine, en agence chez The Design Crew. <a href="work/tdc-heetch.html">Lire l'étude de cas →</a></p>
         </article>
 
         <article class="project" aria-labelledby="tdc-passculture-h">
           <h2 class="project-heading" id="tdc-passculture-h">Pass Culture</h2>
-          <p class="project-meta">The Design Crew · Démocratisation culturelle · 2023</p>
-          <p class="project-stub">Garder les 15–17 ans après l'épuisement du crédit. Rétention post-crédit Pass Culture pour les jeunes, en agence chez The Design Crew. <a href="work/tdc-passculture.html">Lire l'étude de cas →</a></p>
+          <p class="project-meta" data-i18n="work.pmeta.tdc-passculture">The Design Crew · Démocratisation culturelle · 2023</p>
+          <p class="project-stub" data-i18n-html="work.stub.tdc-passculture">Garder les 15–17 ans après l'épuisement du crédit. Rétention post-crédit Pass Culture pour les jeunes, en agence chez The Design Crew. <a href="work/tdc-passculture.html">Lire l'étude de cas →</a></p>
         </article>
 
         <article class="project" aria-labelledby="tie-break-h">
           <h2 class="project-heading" id="tie-break-h">Tie Break</h2>
-          <p class="project-meta">Side project · App iOS padel · 2023</p>
-          <p class="project-stub">L'app padel qui vit au geste, pas dans la poche. Side project iOS centré sur le geste pendant le match plutôt qu'une consultation post-jeu. <a href="work/tie-break.html">Lire l'étude de cas →</a></p>
+          <p class="project-meta" data-i18n="work.pmeta.tie-break">Side project · App iOS padel · 2023</p>
+          <p class="project-stub" data-i18n-html="work.stub.tie-break">L'app padel qui vit au geste, pas dans la poche. Side project iOS centré sur le geste pendant le match plutôt qu'une consultation post-jeu. <a href="work/tie-break.html">Lire l'étude de cas →</a></p>
         </article>
       </div>
 
@@ -308,13 +313,14 @@
   <div class="overlay" hidden role="dialog" aria-modal="true" aria-labelledby="overlay-title">
     <div class="overlay-backdrop" data-overlay-close aria-hidden="true"></div>
     <div class="overlay-panel">
-      <button class="overlay-close" type="button" data-overlay-close aria-label="Fermer">
+      <button class="overlay-close" type="button" data-overlay-close aria-label="Fermer" data-i18n-attr="aria-label:overlay.close">
         <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 2 L12 12 M12 2 L2 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       </button>
       <div class="overlay-content"></div>
     </div>
   </div>
 
-  <script src="../assets/js/main.js?v=45"></script>
+  <script src="../assets/js/i18n.js?v=7"></script>
+  <script src="../assets/js/main.js?v=52"></script>
 </body>
 </html>
